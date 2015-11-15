@@ -1,0 +1,37 @@
+#States
+State A{
+	integer x, x, y;
+	integer x;
+	string y;
+	real w;
+	x = 1 + 9;
+	x = y + y;
+	x = yi();
+	x = y;
+	for(i= 0; i <= 0;i++ ){
+	}
+	
+	if(x <= 9 && x ==9){
+
+	}
+	for(x=d;x=0;x++){
+	
+	}
+	
+	transition B;
+}
+State B{
+	integer x, x, y;
+	integer x;
+	
+	if(x <= 9){
+
+	}
+
+	for(x=d;x=0;x++){
+	
+	}
+		
+	transition B;
+}
+#EndStates

@@ -1,0 +1,7 @@
+program example(input, output);
+var x: integer;
+var y: integer;
+Start
+  x := 5;
+  while x > 0 do x := x - 1
+#End.
