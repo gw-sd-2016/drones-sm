@@ -16,4 +16,4 @@ lex.yy.o: scanner.l
 	flex scanner.l
 
 clean: 
-	rm parser.tab.* lex.yy.* YAPL.exe
+	rm parser.tab.* lex.yy.* YAPL.exe test
