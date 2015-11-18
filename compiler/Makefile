@@ -3,7 +3,7 @@
 CFLAGS= -DEDEBUG# -DEDEBUG
 
 #Set AUTOCOMPILE to auto run the program after compilation
-#AUTOCOMPILE= -DAUTOCOMPILE
+AUTOCOMPILE= -DAUTOCOMPILE
 
 YAPL.exe: parser.tab.o lex.yy.o
 	gcc $(CFLAGS) $(AUTOCOMPILE) parser.tab.c lex.yy.c -lfl -o $@ -w
