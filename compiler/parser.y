@@ -30,7 +30,7 @@ static FILE* enumfile;
 %token <real> REALNO // union structure for storing real number
 %token <string> ID   // union structure for storing identifier's name
 %token <string> FOR_EXPRESSION 
-%token <string> FUNC RELOP
+%token <string> FUNC RELOP PRINTF QUOTE INCLUDE
 %token PROGRAM INTEGER REAL VAR 
 %token BEGINT END STATE_DEC IF FOR THEN ELSE DO  
 %token ROPAR RCPAR ROBRK RCBRK DOT SEMICOLON COMMA COLON TRANSITION
@@ -73,8 +73,15 @@ type: INTEGER {v_type = INTE; eprintf("its an INTEGER %d\n", v_type);}
 |STRING{v_type = STR; eprintf("its a STRING\n");}
 ;
 
-program: BEGINT {fprintf(mainfile, "int main(int argc, char* argv[]){\nvoid* states[] = {");} states END {fprintf(mainfile, "};\n\n");eprintf("Parsed compound statements\n");}
+program: includes
+       BEGINT {fprintf(mainfile, "int main(int argc, char* argv[]){\nvoid* states[] = {");} states END {fprintf(mainfile, "};\n\n");eprintf("Parsed compound statements\n");}
 ;
+
+includes: include
+|includes include
+;
+
+include: INCLUDE {eprintf("INCLUDE %s\n", $1); fprintf(mainfile, "%s\n", $1);}
 
 states: state {eprintf("Single State detected\n");}
 |states state {eprintf("Multiple States Detected\n");}
@@ -97,11 +104,25 @@ statement_list: statement
 ;
 
 statement: operations {eprintf("operations found %d\n",yylineno);}
-|FOR ROPAR FOR_EXPRESSION{fprintf(cfile,"for(%s){\n", $3);}RCPAR ROBRK optional_statements RCBRK {fprintf(cfile,"}\n");eprintf("FOR Statement done %d\n", yylineno);}
-|IF ROPAR {fprintf(cfile,"if(");}comparison_list RCPAR ROBRK {fprintf(cfile, "){\n");} optional_statements RCBRK{fprintf(cfile,"}\n"); eprintf("IF Statement discovered\n");}
+|FOR ROPAR FOR_EXPRESSION{fprintf(cfile,"for(%s){\n", $3);}
+RCPAR ROBRK optional_statements RCBRK {fprintf(cfile,"}\n");eprintf("FOR Statement done %d\n", yylineno);}
+|IF ROPAR {fprintf(cfile,"if(");}comparison_list RCPAR ROBRK {fprintf(cfile, "){\n");} 
+optional_statements RCBRK{fprintf(cfile,"}\n"); eprintf("IF Statement discovered\n");}
+|PRINTF {eprintf("print found\n"); fprintf(cfile, "printf(");} ROPAR printf RCPAR SEMICOLON {fprintf(cfile,");\n");}
 ;
 
-operations: ID ASSIGNOP {eprintf("ID ASSIGNOP math pre line num %d\n", yylineno);fprintf(cfile,"%s = ", $1);}math SEMICOLON{fprintf(cfile,";\n"); eprintf("ID ASSIGNOP math post\n");}
+printf:QUOTE COMMA {eprintf("quote\n");fprintf(cfile,"%s,",$1);} vars
+|QUOTE {eprintf("quote\n");fprintf(cfile,"%s",$1);}
+;
+
+vars: var
+|vars COMMA {fprintf(cfile, ", ");} var
+;
+
+var:ID {fprintf(cfile, "%s",$1);};
+
+operations: ID ASSIGNOP {eprintf("ID ASSIGNOP math pre line num %d\n", yylineno);fprintf(cfile,"%s = ", $1);}
+math SEMICOLON{fprintf(cfile,";\n"); eprintf("ID ASSIGNOP math post\n");}
 ;
 
 math: item 
@@ -174,8 +195,12 @@ int main(int argc, char* argv[]) {
 	yyin = fopen(argv[0], "r");
 	init_hash(hash);  // initiliaze the hash array of pointers to NULL
 	open_asm("asm_out.txt");
+	fprintf(cfile, "if(argc > 1){\nvoid* ptr = states[atoi(argv[1])];\ngoto *ptr;\n}\n");
 	yyparse();
-	//system("gcc cfile.c -o test");
-	//system("./test");
+	fprintf(cfile, "\n}");
+	fclose(mainfile);
+	fclose(cfile);
+	system("cat cfile.c >> mainfile.c; gcc mainfile.c -o test");
+	csystem("./test");
 	return 0;
 }

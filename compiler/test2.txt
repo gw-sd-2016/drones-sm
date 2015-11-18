@@ -1,37 +1,40 @@
+#include<stdio.h>
+
 #States
 State A{
-	integer x, x, y;
-	integer x;
+	integer x, i;
 	string y;
 	real w;
 	x = 1 + 9;
-	x = y + y;
-	x = yi();
-	x = y;
-	for(i= 0; i <= 0;i++ ){
+	for(i= 0; i <= 7; i++ ){
+		printf("loop 1a x: %d i: %d\n", x, i);	
 	}
 	
-	if(x <= 9 && x ==9){
-
+	if(x <= 9){
+		printf("if 1a x: %d\n",x);	
 	}
-	for(x=d;x=0;x++){
-	
+	for(x = 0; x <= 10; x++){
+		printf("loop 2a x: %d\n",x);
 	}
 	
 	transition B;
 }
 State B{
-	integer x, x, y;
-	integer x;
-	
-	if(x <= 9){
-
+	integer q;
+	q = 9;
+	if(q <= 9){
+		printf("if 1b q: %d\n",q);
 	}
-
-	for(x=d;x=0;x++){
 	
+	for(x = 2; x <= q ;x++){
+		printf("loop 1b x: %d q: %d\n", x, q);
 	}
 		
-	transition B;
+	transition C;
+}
+
+State C{
+
+	transition C;
 }
 #EndStates
