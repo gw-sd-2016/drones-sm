@@ -1,5 +1,4 @@
 %{
-#include "ht.c"
 #include "defines.h"
 #include "var_tracker.c"
 
@@ -7,10 +6,6 @@
 fprintf(cfile, "Hello world\n");
 close(cfile);*/
 
-SYM* hash[50];      // hash[] is an array which contains all the symbols by their pointers
-SYM* temp = NULL;   // temp is pointer to symbol, and with the SYM struct, it could be the head of a linked list
-                    // and this linked list is to store the identider_list's symbols or temperary symbols which
-                    // the production rule hasn't finish.
 char* scope = "GLOBAL";      // 0 means the global scope
 var_types v_type = -1;
 extern int yylineno;
@@ -155,8 +150,8 @@ expression: {eprintf("HELLOSLFLDKSJFLSKJFLKSDJF\n");}
 ;
 
 simple_expression: term { $$ = $1; }
-|sign term { $$ = sign($1, $2); }
-|simple_expression ADDOP term { $$ = addop($2, $1, $3);}
+|sign term { $$ = $2; }
+|simple_expression ADDOP term
 ;
 
 term: factor { $$ = $1; }
@@ -165,9 +160,6 @@ term: factor { $$ = $1; }
 
 factor: ID {
 	char* str =  $1;
-	SYM* head = hash[hasher(str)];
-	$$ = head->value;
-	gene_mov(head->name, $$);
 }
 |INT {  eprintf("Got %d\n", $1);
 	$$ = $1; }
@@ -193,8 +185,6 @@ int main(int argc, char* argv[]) {
 	//fclose(fp);
 	++argv; --argc;
 	yyin = fopen(argv[0], "r");
-	init_hash(hash);  // initiliaze the hash array of pointers to NULL
-	open_asm("asm_out.txt");
 	fprintf(cfile, "if(argc > 1){\nvoid* ptr = states[atoi(argv[1])];\ngoto *ptr;\n}\n");
 	yyparse();
 	fprintf(cfile, "\n}");
