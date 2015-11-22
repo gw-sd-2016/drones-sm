@@ -2,11 +2,11 @@
 #Set CFLAGS for debugging printing
 CFLAGS= -DEDEBUG# -DEDEBUG
 
-#Set AUTOCOMPILE to auto run the program after compilation
-AUTOCOMPILE= -DAUTOCOMPILE
+#Set AUTORUN to auto run the program after compilation
+#AUTORUN= -DAUTORUN
 
 YAPL.exe: parser.tab.o lex.yy.o
-	gcc $(CFLAGS) $(AUTOCOMPILE) parser.tab.c lex.yy.c -lfl -o $@ -w
+	gcc $(CFLAGS) $(AUTORUN) parser.tab.c lex.yy.c -lfl -o $@ -w
 
 parser.tab.o: parser.y
 	bison -v -d parser.y
