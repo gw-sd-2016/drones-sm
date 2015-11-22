@@ -5,7 +5,7 @@
 //#define EDEBUG
 //#define AUTOCOMPILE
 
-#ifdef AUTOCOMPILE
+#ifdef AUTORUN
 # define csystem(y) system(y)
 #else
 # define csystem(y) ;
