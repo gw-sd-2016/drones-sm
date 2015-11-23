@@ -1,3 +1,5 @@
+#include "secondary.h"
+#include "function_declares.h"
 #include<stdio.h>
 int main(int argc, char* argv[]){
 void* states[] = {&&state_A,&&state_B,&&state_C,};
@@ -14,6 +16,7 @@ x = 1 + 9;
 for(i= 0; i <= 7; i++ ){
 printf("loop 1a x: %d i: %d\n",x, i);
 }
+printf("Embeded in the code\n");
 if(x <= 9){
 printf("if 1a x: %d\n",x);
 }

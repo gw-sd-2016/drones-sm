@@ -24,9 +24,9 @@ static FILE* enumfile;
 %token <integer> INT // union structure for storing integer
 %token <real> REALNO // union structure for storing real number
 %token <string> ID   // union structure for storing identifier's name
-%token <string> FOR_EXPRESSION 
+%token <string> FOR_EXPRESSION INSERT_C
 %token <string> FUNC RELOP PRINTF QUOTE INCLUDE
-%token PROGRAM INTEGER REAL VAR 
+%token PROGRAM INTEGER REAL VAR
 %token BEGINT END STATE_DEC IF FOR THEN ELSE DO  
 %token ROPAR RCPAR ROBRK RCBRK DOT SEMICOLON COMMA COLON TRANSITION
 %token ASSIGNOP AND OR STRING BANG IF_EXPRESSION
@@ -68,7 +68,7 @@ type: INTEGER {v_type = INTE; eprintf("its an INTEGER %d\n", v_type);}
 |STRING{v_type = STR; eprintf("its a STRING\n");}
 ;
 
-program: includes
+program: {fprintf(mainfile, "#include \"secondary.h\"\n#include \"function_declares.h\"\n");} includes
        BEGINT {fprintf(mainfile, "int main(int argc, char* argv[]){\nvoid* states[] = {");} states END {fprintf(mainfile, "};\n\n");eprintf("Parsed compound statements\n");}
 ;
 
@@ -104,6 +104,10 @@ RCPAR ROBRK optional_statements RCBRK {fprintf(cfile,"}\n");eprintf("FOR Stateme
 |IF ROPAR {fprintf(cfile,"if(");}comparison_list RCPAR ROBRK {fprintf(cfile, "){\n");} 
 optional_statements RCBRK{fprintf(cfile,"}\n"); eprintf("IF Statement discovered\n");}
 |PRINTF {eprintf("print found\n"); fprintf(cfile, "printf(");} ROPAR printf RCPAR SEMICOLON {fprintf(cfile,");\n");}
+|INSERT_C {eprintf("embeded C code\n");
+	char* string = $1 + 9;
+	string[strlen(string) - 1] = '\0';
+	fprintf(cfile, "%s\n", string);}
 ;
 
 printf:QUOTE COMMA {eprintf("quote\n");fprintf(cfile,"%s,",$1);} vars

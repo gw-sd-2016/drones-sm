@@ -25,10 +25,11 @@ program {return PROGRAM ;}
 "#EndStates"	{return END;}
 "State"	{return STATE_DEC;}
 "transition" {eprintf("FOUND TRANSITION\n"); return TRANSITION;}
-"printf"	{eprintf("print statement\n"); return PRINTF;}
+"print"	{eprintf("print statement\n"); return PRINTF;}
 \".*\"	{yylval.string = (char*)strdup(yytext); return QUOTE;}
-\#"include"\".*\"	{yylval.string = (char*)strdup(yytext); return INCLUDE;}
+\#"include"\".*\"	{eprintf("OTHER SHIT FOUND\n"); yylval.string = (char*)strdup(yytext); return INCLUDE;}
 \#"include"\<.*\>	{yylval.string = (char*)strdup(yytext); return INCLUDE;}
+"insert_c{".*\}	{printf("SHIT FOUND %s\n", yytext); yylval.string = (char*)strdup(yytext); return INSERT_C;}
 "="	{return ASSIGNOP;}
 "if"	{return IF;}
 "for"	{return FOR;}
@@ -64,8 +65,7 @@ program {return PROGRAM ;}
 [ ]*{D}[ ]*\=[ ]*({I}|{D})[ ]*\;[ ]*{D}[ ]*(\<|\>)?\=[ ]*({I}|{D})[ ]*\;[ ]*(((\+\+|\-\-){D})|({D}(\+\+|\-\-)))[ ]* {eprintf("FOR[%s]\n", yytext);
        yylval.string = (char*)strdup(yytext); return FOR_EXPRESSION;}
 
-
-[ \t\r\n]+	
+[ \t\r\n]+	;	
 .	          {printf("unrecognized text: %s\n",yytext);}
 
 %%

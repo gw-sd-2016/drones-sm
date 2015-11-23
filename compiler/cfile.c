@@ -10,6 +10,7 @@ x = 1 + 9;
 for(i= 0; i <= 7; i++ ){
 printf("loop 1a x: %d i: %d\n",x, i);
 }
+printf("Embeded in the code\n");
 if(x <= 9){
 printf("if 1a x: %d\n",x);
 }
