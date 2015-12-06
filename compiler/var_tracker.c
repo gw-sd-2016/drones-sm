@@ -55,6 +55,7 @@ int string_to_int(char* string);
 int add_var_dec(var* v);
 int create_var(char* id, var_types t, secondary_type st, char* sc);
 int simple_hash();
+int is_declared(char* string);
 void print_enum_info();
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -79,26 +80,28 @@ int add_var_dec(var* v){
 	string_val = string_to_int(v->id);
 	dprintf("String value is: %d\n",string_val);
 	if(declared_variables[string_val] == NULL){
-		dprintf("There is no current declaration that has the same hash\n\n");
+		dprintf("There is no current declaration that has the same hash BUCKET-%d\n\n", string_val);
 		declared_variables[string_val] = v;
 	}else{
-		dprintf("There is a possible conflict\n");
+		dprintf("There is a possible conflict BUCKET-%d\n", string_val);
 		var* temp = declared_variables[string_val];
 		while(temp->next != NULL){
 			dprintf("Current Declaration ID is: %s\nLooking for ID %s\n", temp->id, v->id);
-			if(temp->id == v->id/* && temp->scope == v->scope*/){
-				printf("LKJJJJJJLKSDJFLKSDFJSDLKFJS\n");
+			if(!strcmp(temp->id, v->id)){
 				fprintf(stderr, "There is a duplicate variable declaration of %s within the scope %s\n", v->id, temp->scope);
+			    //system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
+                exit(-1);
 				return -1;
 			}
 			dprintf("\nThis was not a conflict\n");
 			temp = temp->next;
 		}
 		dprintf("After while loop Current Declaration ID is: %s\nLooking for ID %s\nScope v: %s\nScope temp: %s\n", temp->id, v->id, v->scope, temp->scope);
-		if(temp->id == v->id && temp->scope == v->scope){
-			dprintf("ppppppppppppppFJSDLKFJS\n");
+		if(!strcmp(temp->id, v->id) && !strcmp(temp->scope, v->scope)){
 			fprintf(stderr, "There is a duplicate variable declaration of %s within the scope %s\n", v->id, v->scope);
-			return -1;
+			//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
+			exit(-1);
+            return -1;
 		}
 		dprintf("Setting temp next to v\n");
 		temp->next = v;
@@ -130,6 +133,10 @@ int create_var(char* id, var_types t, secondary_type st, char* sc){
 			dprintf("-----------------------------\n");
 		}
 	}
+}
+
+int is_declared(char* string){
+    return 1;
 }
 
 void print_enum_info(){

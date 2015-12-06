@@ -1,12 +1,3 @@
-Nonterminals useless in grammar
-
-   expression
-   simple_expression
-   term
-   factor
-   sign
-
-
 Terminals unused in grammar
 
    PROGRAM
@@ -21,193 +12,187 @@ Terminals unused in grammar
    MULOP
 
 
-Rules useless in grammar
-
-   62 expression: %empty
-   63           | simple_expression
-   64           | simple_expression RELOP simple_expression
-
-   65 simple_expression: term
-   66                  | sign term
-   67                  | simple_expression ADDOP term
-
-   68 term: factor
-   69     | term MULOP factor
-
-   70 factor: ID
-   71       | INT
-   72       | ROPAR expression RCPAR
-
-   73 sign: ADDOP
-
-
-Rules useless in parser due to conflicts
-
-   44 var: ID
-
-
-State 16 conflicts: 3 shift/reduce
-State 23 conflicts: 5 shift/reduce
-State 35 conflicts: 3 reduce/reduce
-State 90 conflicts: 5 shift/reduce
-State 94 conflicts: 5 shift/reduce
+State 17 conflicts: 3 shift/reduce
+State 24 conflicts: 5 shift/reduce
+State 38 conflicts: 1 shift/reduce
+State 78 conflicts: 1 shift/reduce
+State 100 conflicts: 5 shift/reduce
+State 105 conflicts: 5 shift/reduce
 
 
 Grammar
 
     0 $accept: program $end
 
-    1 identifier_list: var
+    1 identifier_list: vars_decl
 
     2 $@1: %empty
 
-    3 identifier_list: identifier_list COMMA $@1 var
+    3 identifier_list: identifier_list COMMA $@1 vars_decl
 
-    4 var: ID
+    4 vars_decl: var_decl
 
     5 $@2: %empty
 
-    6 declarations: declarations type $@2 identifier_list SEMICOLON
+    6 vars_decl: vars_decl COMMA $@2 var_decl
 
     7 $@3: %empty
 
-    8 declarations: type $@3 identifier_list SEMICOLON
-    9             | %empty
+    8 var_decl: ID $@3 assign
+    9         | %empty
 
-   10 type: INTEGER
-   11     | REAL
-   12     | STRING
+   10 $@4: %empty
 
-   13 $@4: %empty
+   11 declarations: declarations type $@4 identifier_list SEMICOLON
 
-   14 $@5: %empty
+   12 $@5: %empty
 
-   15 program: $@4 includes BEGINT $@5 states END
+   13 declarations: type $@5 identifier_list SEMICOLON
+   14             | %empty
 
-   16 includes: include
-   17         | includes include
+   15 type: INTEGER
+   16     | REAL
+   17     | STRING
 
-   18 include: INCLUDE
+   18 $@6: %empty
 
-   19 states: state
-   20       | states state
+   19 $@7: %empty
 
-   21 $@6: %empty
+   20 program: $@6 includes BEGINT $@7 states END
 
-   22 state: STATE_DEC ID ROBRK declarations $@6 optional_statements TRANSITION trans_state SEMICOLON RCBRK
+   21 includes: include
+   22         | includes include
 
-   23 trans_state: ID
+   23 include: INCLUDE
 
-   24 optional_statements: optional_statements statement_list
-   25                    | statement_list
-   26                    | %empty
+   24 states: state
+   25       | states state
 
-   27 statement_list: statement
-   28               | statement_list SEMICOLON statement
+   26 $@8: %empty
 
-   29 statement: operations
+   27 $@9: %empty
 
-   30 $@7: %empty
+   28 state: STATE_DEC ID $@8 ROBRK declarations $@9 optional_statements TRANSITION trans_state SEMICOLON RCBRK
 
-   31 statement: FOR ROPAR FOR_EXPRESSION $@7 RCPAR ROBRK optional_statements RCBRK
+   29 trans_state: ID
 
-   32 $@8: %empty
+   30 optional_statements: optional_statements statement_list
+   31                    | statement_list
+   32                    | %empty
 
-   33 $@9: %empty
+   33 statement_list: statement
+   34               | statement_list SEMICOLON statement
 
-   34 statement: IF ROPAR $@8 comparison_list RCPAR ROBRK $@9 optional_statements RCBRK
+   35 statement: operations
 
-   35 $@10: %empty
+   36 $@10: %empty
 
-   36 statement: PRINTF $@10 ROPAR printf RCPAR SEMICOLON
-   37          | INSERT_C
+   37 statement: FOR ROPAR FOR_EXPRESSION $@10 RCPAR ROBRK optional_statements RCBRK
 
    38 $@11: %empty
 
-   39 printf: QUOTE COMMA $@11 vars
-   40       | QUOTE
+   39 $@12: %empty
 
-   41 vars: var
+   40 statement: IF ROPAR $@11 comparison_list RCPAR ROBRK $@12 optional_statements RCBRK
 
-   42 $@12: %empty
+   41 $@13: %empty
 
-   43 vars: vars COMMA $@12 var
+   42 statement: PRINTF $@13 ROPAR printf RCPAR SEMICOLON
+   43          | INSERT_C
 
-   44 var: ID
+   44 $@14: %empty
 
-   45 $@13: %empty
+   45 printf: QUOTE COMMA $@14 vars
+   46       | QUOTE
 
-   46 operations: ID ASSIGNOP $@13 math SEMICOLON
+   47 vars: var
 
-   47 math: item
+   48 $@15: %empty
 
-   48 $@14: %empty
+   49 vars: vars COMMA $@15 var
 
-   49 math: math ADDOP $@14 item
+   50 $@16: %empty
 
-   50 item: ID
-   51     | REALNO
-   52     | INT
-   53     | FUNC
+   51 var: ID $@16 assign
 
-   54 comparison_list: comparison
+   52 $@17: %empty
 
-   55 $@15: %empty
+   53 assign: ASSIGNOP $@17 math
+   54       | %empty
 
-   56 comparison_list: comparison_list AND $@15 comparison
+   55 $@18: %empty
 
-   57 $@16: %empty
+   56 operations: ID ASSIGNOP $@18 math SEMICOLON
 
-   58 comparison_list: comparison_list OR $@16 comparison
+   57 math: item
 
-   59 comparison: ID RELOP INT
-   60           | ID RELOP ID
-   61           | ID RELOP FUNC
+   58 $@19: %empty
+
+   59 math: math ADDOP $@19 item
+
+   60 item: ID
+   61     | REALNO
+   62     | INT
+   63     | FUNC
+
+   64 comparison_list: comparison
+
+   65 $@20: %empty
+
+   66 comparison_list: comparison_list AND $@20 comparison
+
+   67 $@21: %empty
+
+   68 comparison_list: comparison_list OR $@21 comparison
+
+   69 comparison: ID RELOP INT
+   70           | ID RELOP ID
+   71           | ID RELOP FUNC
 
 
 Terminals, with rules where they appear
 
 $end (0) 0
 error (256)
-INT (258) 52 59
-REALNO (259) 51
-ID (260) 4 22 23 44 46 50 59 60 61
-FOR_EXPRESSION (261) 31
-INSERT_C (262) 37
-FUNC (263) 53 61
-RELOP (264) 59 60 61
-PRINTF (265) 36
-QUOTE (266) 39 40
-INCLUDE (267) 18
+INT (258) 62 69
+REALNO (259) 61
+ID (260) 8 28 29 51 56 60 69 70 71
+FOR_EXPRESSION (261) 37
+INSERT_C (262) 43
+FUNC (263) 63 71
+RELOP (264) 69 70 71
+PRINTF (265) 42
+QUOTE (266) 45 46
+INCLUDE (267) 23
 PROGRAM (268)
-INTEGER (269) 10
-REAL (270) 11
+INTEGER (269) 15
+REAL (270) 16
 VAR (271)
-BEGINT (272) 15
-END (273) 15
-STATE_DEC (274) 22
-IF (275) 34
-FOR (276) 31
+BEGINT (272) 20
+END (273) 20
+STATE_DEC (274) 28
+IF (275) 40
+FOR (276) 37
 THEN (277)
 ELSE (278)
 DO (279)
-ROPAR (280) 31 34 36
-RCPAR (281) 31 34 36
-ROBRK (282) 22 31 34
-RCBRK (283) 22 31 34
+ROPAR (280) 37 40 42
+RCPAR (281) 37 40 42
+ROBRK (282) 28 37 40
+RCBRK (283) 28 37 40
 DOT (284)
-SEMICOLON (285) 6 8 22 28 36 46
-COMMA (286) 3 39 43
+SEMICOLON (285) 11 13 28 34 42 56
+COMMA (286) 3 6 45 49
 COLON (287)
-TRANSITION (288) 22
-ASSIGNOP (289) 46
-AND (290) 56
-OR (291) 58
-STRING (292) 12
+TRANSITION (288) 28
+ASSIGNOP (289) 53 56
+AND (290) 66
+OR (291) 68
+STRING (292) 17
 BANG (293)
 IF_EXPRESSION (294)
 MULOP (295)
-ADDOP (296) 49
+ADDOP (296) 59
 
 
 Nonterminals, with rules where they appear
@@ -215,87 +200,103 @@ Nonterminals, with rules where they appear
 $accept (42)
     on left: 0
 identifier_list (43)
-    on left: 1 3, on right: 3 6 8
+    on left: 1 3, on right: 3 11 13
 $@1 (44)
     on left: 2, on right: 3
-var (45)
-    on left: 4 44, on right: 1 3 41 43
-declarations (46)
-    on left: 6 8 9, on right: 6 22
-$@2 (47)
+vars_decl (45)
+    on left: 4 6, on right: 1 3 6
+$@2 (46)
     on left: 5, on right: 6
+var_decl (47)
+    on left: 8 9, on right: 4 6
 $@3 (48)
     on left: 7, on right: 8
-type (49)
-    on left: 10 11 12, on right: 6 8
-program (50)
-    on left: 15, on right: 0
-$@4 (51)
-    on left: 13, on right: 15
-$@5 (52)
-    on left: 14, on right: 15
-includes (53)
-    on left: 16 17, on right: 15 17
-include (54)
-    on left: 18, on right: 16 17
-states (55)
-    on left: 19 20, on right: 15 20
-state (56)
-    on left: 22, on right: 19 20
-$@6 (57)
-    on left: 21, on right: 22
-trans_state (58)
-    on left: 23, on right: 22
-optional_statements (59)
-    on left: 24 25 26, on right: 22 24 31 34
-statement_list (60)
-    on left: 27 28, on right: 24 25 28
-statement (61)
-    on left: 29 31 34 36 37, on right: 27 28
-$@7 (62)
-    on left: 30, on right: 31
-$@8 (63)
-    on left: 32, on right: 34
-$@9 (64)
-    on left: 33, on right: 34
-$@10 (65)
-    on left: 35, on right: 36
-printf (66)
-    on left: 39 40, on right: 36
+declarations (49)
+    on left: 11 13 14, on right: 11 28
+$@4 (50)
+    on left: 10, on right: 11
+$@5 (51)
+    on left: 12, on right: 13
+type (52)
+    on left: 15 16 17, on right: 11 13
+program (53)
+    on left: 20, on right: 0
+$@6 (54)
+    on left: 18, on right: 20
+$@7 (55)
+    on left: 19, on right: 20
+includes (56)
+    on left: 21 22, on right: 20 22
+include (57)
+    on left: 23, on right: 21 22
+states (58)
+    on left: 24 25, on right: 20 25
+state (59)
+    on left: 28, on right: 24 25
+$@8 (60)
+    on left: 26, on right: 28
+$@9 (61)
+    on left: 27, on right: 28
+trans_state (62)
+    on left: 29, on right: 28
+optional_statements (63)
+    on left: 30 31 32, on right: 28 30 37 40
+statement_list (64)
+    on left: 33 34, on right: 30 31 34
+statement (65)
+    on left: 35 37 40 42 43, on right: 33 34
+$@10 (66)
+    on left: 36, on right: 37
 $@11 (67)
-    on left: 38, on right: 39
-vars (68)
-    on left: 41 43, on right: 39 43
-$@12 (69)
-    on left: 42, on right: 43
-operations (70)
-    on left: 46, on right: 29
-$@13 (71)
-    on left: 45, on right: 46
-math (72)
-    on left: 47 49, on right: 46 49
-$@14 (73)
+    on left: 38, on right: 40
+$@12 (68)
+    on left: 39, on right: 40
+$@13 (69)
+    on left: 41, on right: 42
+printf (70)
+    on left: 45 46, on right: 42
+$@14 (71)
+    on left: 44, on right: 45
+vars (72)
+    on left: 47 49, on right: 45 49
+$@15 (73)
     on left: 48, on right: 49
-item (74)
-    on left: 50 51 52 53, on right: 47 49
-comparison_list (75)
-    on left: 54 56 58, on right: 34 56 58
-$@15 (76)
+var (74)
+    on left: 51, on right: 47 49
+$@16 (75)
+    on left: 50, on right: 51
+assign (76)
+    on left: 53 54, on right: 8 51
+$@17 (77)
+    on left: 52, on right: 53
+operations (78)
+    on left: 56, on right: 35
+$@18 (79)
     on left: 55, on right: 56
-$@16 (77)
-    on left: 57, on right: 58
-comparison (78)
-    on left: 59 60 61, on right: 54 56 58
+math (80)
+    on left: 57 59, on right: 53 56 59
+$@19 (81)
+    on left: 58, on right: 59
+item (82)
+    on left: 60 61 62 63, on right: 57 59
+comparison_list (83)
+    on left: 64 66 68, on right: 40 66 68
+$@20 (84)
+    on left: 65, on right: 66
+$@21 (85)
+    on left: 67, on right: 68
+comparison (86)
+    on left: 69 70 71, on right: 64 66 68
 
 
 State 0
 
     0 $accept: . program $end
 
-    $default  reduce using rule 13 ($@4)
+    $default  reduce using rule 18 ($@6)
 
     program  go to state 1
-    $@4      go to state 2
+    $@6      go to state 2
 
 
 State 1
@@ -307,7 +308,7 @@ State 1
 
 State 2
 
-   15 program: $@4 . includes BEGINT $@5 states END
+   20 program: $@6 . includes BEGINT $@7 states END
 
     INCLUDE  shift, and go to state 4
 
@@ -324,15 +325,15 @@ State 3
 
 State 4
 
-   18 include: INCLUDE .
+   23 include: INCLUDE .
 
-    $default  reduce using rule 18 (include)
+    $default  reduce using rule 23 (include)
 
 
 State 5
 
-   15 program: $@4 includes . BEGINT $@5 states END
-   17 includes: includes . include
+   20 program: $@6 includes . BEGINT $@7 states END
+   22 includes: includes . include
 
     INCLUDE  shift, and go to state 4
     BEGINT   shift, and go to state 7
@@ -342,30 +343,30 @@ State 5
 
 State 6
 
-   16 includes: include .
+   21 includes: include .
 
-    $default  reduce using rule 16 (includes)
+    $default  reduce using rule 21 (includes)
 
 
 State 7
 
-   15 program: $@4 includes BEGINT . $@5 states END
+   20 program: $@6 includes BEGINT . $@7 states END
 
-    $default  reduce using rule 14 ($@5)
+    $default  reduce using rule 19 ($@7)
 
-    $@5  go to state 9
+    $@7  go to state 9
 
 
 State 8
 
-   17 includes: includes include .
+   22 includes: includes include .
 
-    $default  reduce using rule 17 (includes)
+    $default  reduce using rule 22 (includes)
 
 
 State 9
 
-   15 program: $@4 includes BEGINT $@5 . states END
+   20 program: $@6 includes BEGINT $@7 . states END
 
     STATE_DEC  shift, and go to state 10
 
@@ -375,15 +376,15 @@ State 9
 
 State 10
 
-   22 state: STATE_DEC . ID ROBRK declarations $@6 optional_statements TRANSITION trans_state SEMICOLON RCBRK
+   28 state: STATE_DEC . ID $@8 ROBRK declarations $@9 optional_statements TRANSITION trans_state SEMICOLON RCBRK
 
     ID  shift, and go to state 13
 
 
 State 11
 
-   15 program: $@4 includes BEGINT $@5 states . END
-   20 states: states . state
+   20 program: $@6 includes BEGINT $@7 states . END
+   25 states: states . state
 
     END        shift, and go to state 14
     STATE_DEC  shift, and go to state 10
@@ -393,842 +394,974 @@ State 11
 
 State 12
 
-   19 states: state .
+   24 states: state .
 
-    $default  reduce using rule 19 (states)
+    $default  reduce using rule 24 (states)
 
 
 State 13
 
-   22 state: STATE_DEC ID . ROBRK declarations $@6 optional_statements TRANSITION trans_state SEMICOLON RCBRK
+   28 state: STATE_DEC ID . $@8 ROBRK declarations $@9 optional_statements TRANSITION trans_state SEMICOLON RCBRK
 
-    ROBRK  shift, and go to state 16
+    $default  reduce using rule 26 ($@8)
+
+    $@8  go to state 16
 
 
 State 14
 
-   15 program: $@4 includes BEGINT $@5 states END .
+   20 program: $@6 includes BEGINT $@7 states END .
 
-    $default  reduce using rule 15 (program)
+    $default  reduce using rule 20 (program)
 
 
 State 15
 
-   20 states: states state .
+   25 states: states state .
 
-    $default  reduce using rule 20 (states)
+    $default  reduce using rule 25 (states)
 
 
 State 16
 
-   22 state: STATE_DEC ID ROBRK . declarations $@6 optional_statements TRANSITION trans_state SEMICOLON RCBRK
+   28 state: STATE_DEC ID $@8 . ROBRK declarations $@9 optional_statements TRANSITION trans_state SEMICOLON RCBRK
 
-    INTEGER  shift, and go to state 17
-    REAL     shift, and go to state 18
-    STRING   shift, and go to state 19
-
-    INTEGER   [reduce using rule 9 (declarations)]
-    REAL      [reduce using rule 9 (declarations)]
-    STRING    [reduce using rule 9 (declarations)]
-    $default  reduce using rule 9 (declarations)
-
-    declarations  go to state 20
-    type          go to state 21
+    ROBRK  shift, and go to state 17
 
 
 State 17
 
-   10 type: INTEGER .
+   28 state: STATE_DEC ID $@8 ROBRK . declarations $@9 optional_statements TRANSITION trans_state SEMICOLON RCBRK
 
-    $default  reduce using rule 10 (type)
+    INTEGER  shift, and go to state 18
+    REAL     shift, and go to state 19
+    STRING   shift, and go to state 20
+
+    INTEGER   [reduce using rule 14 (declarations)]
+    REAL      [reduce using rule 14 (declarations)]
+    STRING    [reduce using rule 14 (declarations)]
+    $default  reduce using rule 14 (declarations)
+
+    declarations  go to state 21
+    type          go to state 22
 
 
 State 18
 
-   11 type: REAL .
+   15 type: INTEGER .
 
-    $default  reduce using rule 11 (type)
+    $default  reduce using rule 15 (type)
 
 
 State 19
 
-   12 type: STRING .
+   16 type: REAL .
 
-    $default  reduce using rule 12 (type)
+    $default  reduce using rule 16 (type)
 
 
 State 20
 
-    6 declarations: declarations . type $@2 identifier_list SEMICOLON
-   22 state: STATE_DEC ID ROBRK declarations . $@6 optional_statements TRANSITION trans_state SEMICOLON RCBRK
+   17 type: STRING .
 
-    INTEGER  shift, and go to state 17
-    REAL     shift, and go to state 18
-    STRING   shift, and go to state 19
-
-    $default  reduce using rule 21 ($@6)
-
-    type  go to state 22
-    $@6   go to state 23
+    $default  reduce using rule 17 (type)
 
 
 State 21
 
-    8 declarations: type . $@3 identifier_list SEMICOLON
+   11 declarations: declarations . type $@4 identifier_list SEMICOLON
+   28 state: STATE_DEC ID $@8 ROBRK declarations . $@9 optional_statements TRANSITION trans_state SEMICOLON RCBRK
 
-    $default  reduce using rule 7 ($@3)
+    INTEGER  shift, and go to state 18
+    REAL     shift, and go to state 19
+    STRING   shift, and go to state 20
 
-    $@3  go to state 24
+    $default  reduce using rule 27 ($@9)
+
+    type  go to state 23
+    $@9   go to state 24
 
 
 State 22
 
-    6 declarations: declarations type . $@2 identifier_list SEMICOLON
+   13 declarations: type . $@5 identifier_list SEMICOLON
 
-    $default  reduce using rule 5 ($@2)
+    $default  reduce using rule 12 ($@5)
 
-    $@2  go to state 25
+    $@5  go to state 25
 
 
 State 23
 
-   22 state: STATE_DEC ID ROBRK declarations $@6 . optional_statements TRANSITION trans_state SEMICOLON RCBRK
+   11 declarations: declarations type . $@4 identifier_list SEMICOLON
 
-    ID        shift, and go to state 26
-    INSERT_C  shift, and go to state 27
-    PRINTF    shift, and go to state 28
-    IF        shift, and go to state 29
-    FOR       shift, and go to state 30
+    $default  reduce using rule 10 ($@4)
 
-    ID        [reduce using rule 26 (optional_statements)]
-    INSERT_C  [reduce using rule 26 (optional_statements)]
-    PRINTF    [reduce using rule 26 (optional_statements)]
-    IF        [reduce using rule 26 (optional_statements)]
-    FOR       [reduce using rule 26 (optional_statements)]
-    $default  reduce using rule 26 (optional_statements)
-
-    optional_statements  go to state 31
-    statement_list       go to state 32
-    statement            go to state 33
-    operations           go to state 34
+    $@4  go to state 26
 
 
 State 24
 
-    8 declarations: type $@3 . identifier_list SEMICOLON
+   28 state: STATE_DEC ID $@8 ROBRK declarations $@9 . optional_statements TRANSITION trans_state SEMICOLON RCBRK
 
-    ID  shift, and go to state 35
+    ID        shift, and go to state 27
+    INSERT_C  shift, and go to state 28
+    PRINTF    shift, and go to state 29
+    IF        shift, and go to state 30
+    FOR       shift, and go to state 31
 
-    identifier_list  go to state 36
-    var              go to state 37
+    ID        [reduce using rule 32 (optional_statements)]
+    INSERT_C  [reduce using rule 32 (optional_statements)]
+    PRINTF    [reduce using rule 32 (optional_statements)]
+    IF        [reduce using rule 32 (optional_statements)]
+    FOR       [reduce using rule 32 (optional_statements)]
+    $default  reduce using rule 32 (optional_statements)
+
+    optional_statements  go to state 32
+    statement_list       go to state 33
+    statement            go to state 34
+    operations           go to state 35
 
 
 State 25
 
-    6 declarations: declarations type $@2 . identifier_list SEMICOLON
+   13 declarations: type $@5 . identifier_list SEMICOLON
 
-    ID  shift, and go to state 35
+    ID  shift, and go to state 36
 
-    identifier_list  go to state 38
-    var              go to state 37
+    $default  reduce using rule 9 (var_decl)
+
+    identifier_list  go to state 37
+    vars_decl        go to state 38
+    var_decl         go to state 39
 
 
 State 26
 
-   46 operations: ID . ASSIGNOP $@13 math SEMICOLON
+   11 declarations: declarations type $@4 . identifier_list SEMICOLON
 
-    ASSIGNOP  shift, and go to state 39
+    ID  shift, and go to state 36
+
+    $default  reduce using rule 9 (var_decl)
+
+    identifier_list  go to state 40
+    vars_decl        go to state 38
+    var_decl         go to state 39
 
 
 State 27
 
-   37 statement: INSERT_C .
+   56 operations: ID . ASSIGNOP $@18 math SEMICOLON
 
-    $default  reduce using rule 37 (statement)
+    ASSIGNOP  shift, and go to state 41
 
 
 State 28
 
-   36 statement: PRINTF . $@10 ROPAR printf RCPAR SEMICOLON
+   43 statement: INSERT_C .
 
-    $default  reduce using rule 35 ($@10)
-
-    $@10  go to state 40
+    $default  reduce using rule 43 (statement)
 
 
 State 29
 
-   34 statement: IF . ROPAR $@8 comparison_list RCPAR ROBRK $@9 optional_statements RCBRK
+   42 statement: PRINTF . $@13 ROPAR printf RCPAR SEMICOLON
 
-    ROPAR  shift, and go to state 41
+    $default  reduce using rule 41 ($@13)
+
+    $@13  go to state 42
 
 
 State 30
 
-   31 statement: FOR . ROPAR FOR_EXPRESSION $@7 RCPAR ROBRK optional_statements RCBRK
+   40 statement: IF . ROPAR $@11 comparison_list RCPAR ROBRK $@12 optional_statements RCBRK
 
-    ROPAR  shift, and go to state 42
+    ROPAR  shift, and go to state 43
 
 
 State 31
 
-   22 state: STATE_DEC ID ROBRK declarations $@6 optional_statements . TRANSITION trans_state SEMICOLON RCBRK
-   24 optional_statements: optional_statements . statement_list
+   37 statement: FOR . ROPAR FOR_EXPRESSION $@10 RCPAR ROBRK optional_statements RCBRK
 
-    ID          shift, and go to state 26
-    INSERT_C    shift, and go to state 27
-    PRINTF      shift, and go to state 28
-    IF          shift, and go to state 29
-    FOR         shift, and go to state 30
-    TRANSITION  shift, and go to state 43
-
-    statement_list  go to state 44
-    statement       go to state 33
-    operations      go to state 34
+    ROPAR  shift, and go to state 44
 
 
 State 32
 
-   25 optional_statements: statement_list .
-   28 statement_list: statement_list . SEMICOLON statement
+   28 state: STATE_DEC ID $@8 ROBRK declarations $@9 optional_statements . TRANSITION trans_state SEMICOLON RCBRK
+   30 optional_statements: optional_statements . statement_list
 
-    SEMICOLON  shift, and go to state 45
+    ID          shift, and go to state 27
+    INSERT_C    shift, and go to state 28
+    PRINTF      shift, and go to state 29
+    IF          shift, and go to state 30
+    FOR         shift, and go to state 31
+    TRANSITION  shift, and go to state 45
 
-    $default  reduce using rule 25 (optional_statements)
+    statement_list  go to state 46
+    statement       go to state 34
+    operations      go to state 35
 
 
 State 33
 
-   27 statement_list: statement .
+   31 optional_statements: statement_list .
+   34 statement_list: statement_list . SEMICOLON statement
 
-    $default  reduce using rule 27 (statement_list)
+    SEMICOLON  shift, and go to state 47
+
+    $default  reduce using rule 31 (optional_statements)
 
 
 State 34
 
-   29 statement: operations .
+   33 statement_list: statement .
 
-    $default  reduce using rule 29 (statement)
+    $default  reduce using rule 33 (statement_list)
 
 
 State 35
 
-    4 var: ID .
-   44    | ID .
+   35 statement: operations .
 
-    RCPAR      reduce using rule 4 (var)
-    RCPAR      [reduce using rule 44 (var)]
-    SEMICOLON  reduce using rule 4 (var)
-    SEMICOLON  [reduce using rule 44 (var)]
-    COMMA      reduce using rule 4 (var)
-    COMMA      [reduce using rule 44 (var)]
-    $default   reduce using rule 4 (var)
+    $default  reduce using rule 35 (statement)
 
 
 State 36
 
-    3 identifier_list: identifier_list . COMMA $@1 var
-    8 declarations: type $@3 identifier_list . SEMICOLON
+    8 var_decl: ID . $@3 assign
 
-    SEMICOLON  shift, and go to state 46
-    COMMA      shift, and go to state 47
+    $default  reduce using rule 7 ($@3)
+
+    $@3  go to state 48
 
 
 State 37
 
-    1 identifier_list: var .
+    3 identifier_list: identifier_list . COMMA $@1 vars_decl
+   13 declarations: type $@5 identifier_list . SEMICOLON
 
-    $default  reduce using rule 1 (identifier_list)
+    SEMICOLON  shift, and go to state 49
+    COMMA      shift, and go to state 50
 
 
 State 38
 
-    3 identifier_list: identifier_list . COMMA $@1 var
-    6 declarations: declarations type $@2 identifier_list . SEMICOLON
+    1 identifier_list: vars_decl .
+    6 vars_decl: vars_decl . COMMA $@2 var_decl
 
-    SEMICOLON  shift, and go to state 48
-    COMMA      shift, and go to state 47
+    COMMA  shift, and go to state 51
+
+    COMMA     [reduce using rule 1 (identifier_list)]
+    $default  reduce using rule 1 (identifier_list)
 
 
 State 39
 
-   46 operations: ID ASSIGNOP . $@13 math SEMICOLON
+    4 vars_decl: var_decl .
 
-    $default  reduce using rule 45 ($@13)
-
-    $@13  go to state 49
+    $default  reduce using rule 4 (vars_decl)
 
 
 State 40
 
-   36 statement: PRINTF $@10 . ROPAR printf RCPAR SEMICOLON
+    3 identifier_list: identifier_list . COMMA $@1 vars_decl
+   11 declarations: declarations type $@4 identifier_list . SEMICOLON
 
-    ROPAR  shift, and go to state 50
+    SEMICOLON  shift, and go to state 52
+    COMMA      shift, and go to state 50
 
 
 State 41
 
-   34 statement: IF ROPAR . $@8 comparison_list RCPAR ROBRK $@9 optional_statements RCBRK
+   56 operations: ID ASSIGNOP . $@18 math SEMICOLON
 
-    $default  reduce using rule 32 ($@8)
+    $default  reduce using rule 55 ($@18)
 
-    $@8  go to state 51
+    $@18  go to state 53
 
 
 State 42
 
-   31 statement: FOR ROPAR . FOR_EXPRESSION $@7 RCPAR ROBRK optional_statements RCBRK
+   42 statement: PRINTF $@13 . ROPAR printf RCPAR SEMICOLON
 
-    FOR_EXPRESSION  shift, and go to state 52
+    ROPAR  shift, and go to state 54
 
 
 State 43
 
-   22 state: STATE_DEC ID ROBRK declarations $@6 optional_statements TRANSITION . trans_state SEMICOLON RCBRK
+   40 statement: IF ROPAR . $@11 comparison_list RCPAR ROBRK $@12 optional_statements RCBRK
 
-    ID  shift, and go to state 53
+    $default  reduce using rule 38 ($@11)
 
-    trans_state  go to state 54
+    $@11  go to state 55
 
 
 State 44
 
-   24 optional_statements: optional_statements statement_list .
-   28 statement_list: statement_list . SEMICOLON statement
+   37 statement: FOR ROPAR . FOR_EXPRESSION $@10 RCPAR ROBRK optional_statements RCBRK
 
-    SEMICOLON  shift, and go to state 45
-
-    $default  reduce using rule 24 (optional_statements)
+    FOR_EXPRESSION  shift, and go to state 56
 
 
 State 45
 
-   28 statement_list: statement_list SEMICOLON . statement
+   28 state: STATE_DEC ID $@8 ROBRK declarations $@9 optional_statements TRANSITION . trans_state SEMICOLON RCBRK
 
-    ID        shift, and go to state 26
-    INSERT_C  shift, and go to state 27
-    PRINTF    shift, and go to state 28
-    IF        shift, and go to state 29
-    FOR       shift, and go to state 30
+    ID  shift, and go to state 57
 
-    statement   go to state 55
-    operations  go to state 34
+    trans_state  go to state 58
 
 
 State 46
 
-    8 declarations: type $@3 identifier_list SEMICOLON .
+   30 optional_statements: optional_statements statement_list .
+   34 statement_list: statement_list . SEMICOLON statement
 
-    $default  reduce using rule 8 (declarations)
+    SEMICOLON  shift, and go to state 47
+
+    $default  reduce using rule 30 (optional_statements)
 
 
 State 47
 
-    3 identifier_list: identifier_list COMMA . $@1 var
+   34 statement_list: statement_list SEMICOLON . statement
 
-    $default  reduce using rule 2 ($@1)
+    ID        shift, and go to state 27
+    INSERT_C  shift, and go to state 28
+    PRINTF    shift, and go to state 29
+    IF        shift, and go to state 30
+    FOR       shift, and go to state 31
 
-    $@1  go to state 56
+    statement   go to state 59
+    operations  go to state 35
 
 
 State 48
 
-    6 declarations: declarations type $@2 identifier_list SEMICOLON .
+    8 var_decl: ID $@3 . assign
 
-    $default  reduce using rule 6 (declarations)
+    ASSIGNOP  shift, and go to state 60
+
+    $default  reduce using rule 54 (assign)
+
+    assign  go to state 61
 
 
 State 49
 
-   46 operations: ID ASSIGNOP $@13 . math SEMICOLON
+   13 declarations: type $@5 identifier_list SEMICOLON .
 
-    INT     shift, and go to state 57
-    REALNO  shift, and go to state 58
-    ID      shift, and go to state 59
-    FUNC    shift, and go to state 60
-
-    math  go to state 61
-    item  go to state 62
+    $default  reduce using rule 13 (declarations)
 
 
 State 50
 
-   36 statement: PRINTF $@10 ROPAR . printf RCPAR SEMICOLON
+    3 identifier_list: identifier_list COMMA . $@1 vars_decl
 
-    QUOTE  shift, and go to state 63
+    $default  reduce using rule 2 ($@1)
 
-    printf  go to state 64
+    $@1  go to state 62
 
 
 State 51
 
-   34 statement: IF ROPAR $@8 . comparison_list RCPAR ROBRK $@9 optional_statements RCBRK
+    6 vars_decl: vars_decl COMMA . $@2 var_decl
 
-    ID  shift, and go to state 65
+    $default  reduce using rule 5 ($@2)
 
-    comparison_list  go to state 66
-    comparison       go to state 67
+    $@2  go to state 63
 
 
 State 52
 
-   31 statement: FOR ROPAR FOR_EXPRESSION . $@7 RCPAR ROBRK optional_statements RCBRK
+   11 declarations: declarations type $@4 identifier_list SEMICOLON .
 
-    $default  reduce using rule 30 ($@7)
-
-    $@7  go to state 68
+    $default  reduce using rule 11 (declarations)
 
 
 State 53
 
-   23 trans_state: ID .
+   56 operations: ID ASSIGNOP $@18 . math SEMICOLON
 
-    $default  reduce using rule 23 (trans_state)
+    INT     shift, and go to state 64
+    REALNO  shift, and go to state 65
+    ID      shift, and go to state 66
+    FUNC    shift, and go to state 67
+
+    math  go to state 68
+    item  go to state 69
 
 
 State 54
 
-   22 state: STATE_DEC ID ROBRK declarations $@6 optional_statements TRANSITION trans_state . SEMICOLON RCBRK
+   42 statement: PRINTF $@13 ROPAR . printf RCPAR SEMICOLON
 
-    SEMICOLON  shift, and go to state 69
+    QUOTE  shift, and go to state 70
+
+    printf  go to state 71
 
 
 State 55
 
-   28 statement_list: statement_list SEMICOLON statement .
+   40 statement: IF ROPAR $@11 . comparison_list RCPAR ROBRK $@12 optional_statements RCBRK
 
-    $default  reduce using rule 28 (statement_list)
+    ID  shift, and go to state 72
+
+    comparison_list  go to state 73
+    comparison       go to state 74
 
 
 State 56
 
-    3 identifier_list: identifier_list COMMA $@1 . var
+   37 statement: FOR ROPAR FOR_EXPRESSION . $@10 RCPAR ROBRK optional_statements RCBRK
 
-    ID  shift, and go to state 35
+    $default  reduce using rule 36 ($@10)
 
-    var  go to state 70
+    $@10  go to state 75
 
 
 State 57
 
-   52 item: INT .
+   29 trans_state: ID .
 
-    $default  reduce using rule 52 (item)
+    $default  reduce using rule 29 (trans_state)
 
 
 State 58
 
-   51 item: REALNO .
+   28 state: STATE_DEC ID $@8 ROBRK declarations $@9 optional_statements TRANSITION trans_state . SEMICOLON RCBRK
 
-    $default  reduce using rule 51 (item)
+    SEMICOLON  shift, and go to state 76
 
 
 State 59
 
-   50 item: ID .
+   34 statement_list: statement_list SEMICOLON statement .
 
-    $default  reduce using rule 50 (item)
+    $default  reduce using rule 34 (statement_list)
 
 
 State 60
 
-   53 item: FUNC .
+   53 assign: ASSIGNOP . $@17 math
 
-    $default  reduce using rule 53 (item)
+    $default  reduce using rule 52 ($@17)
+
+    $@17  go to state 77
 
 
 State 61
 
-   46 operations: ID ASSIGNOP $@13 math . SEMICOLON
-   49 math: math . ADDOP $@14 item
+    8 var_decl: ID $@3 assign .
 
-    SEMICOLON  shift, and go to state 71
-    ADDOP      shift, and go to state 72
+    $default  reduce using rule 8 (var_decl)
 
 
 State 62
 
-   47 math: item .
+    3 identifier_list: identifier_list COMMA $@1 . vars_decl
 
-    $default  reduce using rule 47 (math)
+    ID  shift, and go to state 36
+
+    $default  reduce using rule 9 (var_decl)
+
+    vars_decl  go to state 78
+    var_decl   go to state 39
 
 
 State 63
 
-   39 printf: QUOTE . COMMA $@11 vars
-   40       | QUOTE .
+    6 vars_decl: vars_decl COMMA $@2 . var_decl
 
-    COMMA  shift, and go to state 73
+    ID  shift, and go to state 36
 
-    $default  reduce using rule 40 (printf)
+    $default  reduce using rule 9 (var_decl)
+
+    var_decl  go to state 79
 
 
 State 64
 
-   36 statement: PRINTF $@10 ROPAR printf . RCPAR SEMICOLON
+   62 item: INT .
 
-    RCPAR  shift, and go to state 74
+    $default  reduce using rule 62 (item)
 
 
 State 65
 
-   59 comparison: ID . RELOP INT
-   60           | ID . RELOP ID
-   61           | ID . RELOP FUNC
+   61 item: REALNO .
 
-    RELOP  shift, and go to state 75
+    $default  reduce using rule 61 (item)
 
 
 State 66
 
-   34 statement: IF ROPAR $@8 comparison_list . RCPAR ROBRK $@9 optional_statements RCBRK
-   56 comparison_list: comparison_list . AND $@15 comparison
-   58                | comparison_list . OR $@16 comparison
+   60 item: ID .
 
-    RCPAR  shift, and go to state 76
-    AND    shift, and go to state 77
-    OR     shift, and go to state 78
+    $default  reduce using rule 60 (item)
 
 
 State 67
 
-   54 comparison_list: comparison .
+   63 item: FUNC .
 
-    $default  reduce using rule 54 (comparison_list)
+    $default  reduce using rule 63 (item)
 
 
 State 68
 
-   31 statement: FOR ROPAR FOR_EXPRESSION $@7 . RCPAR ROBRK optional_statements RCBRK
+   56 operations: ID ASSIGNOP $@18 math . SEMICOLON
+   59 math: math . ADDOP $@19 item
 
-    RCPAR  shift, and go to state 79
+    SEMICOLON  shift, and go to state 80
+    ADDOP      shift, and go to state 81
 
 
 State 69
 
-   22 state: STATE_DEC ID ROBRK declarations $@6 optional_statements TRANSITION trans_state SEMICOLON . RCBRK
+   57 math: item .
 
-    RCBRK  shift, and go to state 80
+    $default  reduce using rule 57 (math)
 
 
 State 70
 
-    3 identifier_list: identifier_list COMMA $@1 var .
+   45 printf: QUOTE . COMMA $@14 vars
+   46       | QUOTE .
 
-    $default  reduce using rule 3 (identifier_list)
+    COMMA  shift, and go to state 82
+
+    $default  reduce using rule 46 (printf)
 
 
 State 71
 
-   46 operations: ID ASSIGNOP $@13 math SEMICOLON .
+   42 statement: PRINTF $@13 ROPAR printf . RCPAR SEMICOLON
 
-    $default  reduce using rule 46 (operations)
+    RCPAR  shift, and go to state 83
 
 
 State 72
 
-   49 math: math ADDOP . $@14 item
+   69 comparison: ID . RELOP INT
+   70           | ID . RELOP ID
+   71           | ID . RELOP FUNC
 
-    $default  reduce using rule 48 ($@14)
-
-    $@14  go to state 81
+    RELOP  shift, and go to state 84
 
 
 State 73
 
-   39 printf: QUOTE COMMA . $@11 vars
+   40 statement: IF ROPAR $@11 comparison_list . RCPAR ROBRK $@12 optional_statements RCBRK
+   66 comparison_list: comparison_list . AND $@20 comparison
+   68                | comparison_list . OR $@21 comparison
 
-    $default  reduce using rule 38 ($@11)
-
-    $@11  go to state 82
+    RCPAR  shift, and go to state 85
+    AND    shift, and go to state 86
+    OR     shift, and go to state 87
 
 
 State 74
 
-   36 statement: PRINTF $@10 ROPAR printf RCPAR . SEMICOLON
+   64 comparison_list: comparison .
 
-    SEMICOLON  shift, and go to state 83
+    $default  reduce using rule 64 (comparison_list)
 
 
 State 75
 
-   59 comparison: ID RELOP . INT
-   60           | ID RELOP . ID
-   61           | ID RELOP . FUNC
+   37 statement: FOR ROPAR FOR_EXPRESSION $@10 . RCPAR ROBRK optional_statements RCBRK
 
-    INT   shift, and go to state 84
-    ID    shift, and go to state 85
-    FUNC  shift, and go to state 86
+    RCPAR  shift, and go to state 88
 
 
 State 76
 
-   34 statement: IF ROPAR $@8 comparison_list RCPAR . ROBRK $@9 optional_statements RCBRK
+   28 state: STATE_DEC ID $@8 ROBRK declarations $@9 optional_statements TRANSITION trans_state SEMICOLON . RCBRK
 
-    ROBRK  shift, and go to state 87
+    RCBRK  shift, and go to state 89
 
 
 State 77
 
-   56 comparison_list: comparison_list AND . $@15 comparison
+   53 assign: ASSIGNOP $@17 . math
 
-    $default  reduce using rule 55 ($@15)
+    INT     shift, and go to state 64
+    REALNO  shift, and go to state 65
+    ID      shift, and go to state 66
+    FUNC    shift, and go to state 67
 
-    $@15  go to state 88
+    math  go to state 90
+    item  go to state 69
 
 
 State 78
 
-   58 comparison_list: comparison_list OR . $@16 comparison
+    3 identifier_list: identifier_list COMMA $@1 vars_decl .
+    6 vars_decl: vars_decl . COMMA $@2 var_decl
 
-    $default  reduce using rule 57 ($@16)
+    COMMA  shift, and go to state 51
 
-    $@16  go to state 89
+    COMMA     [reduce using rule 3 (identifier_list)]
+    $default  reduce using rule 3 (identifier_list)
 
 
 State 79
 
-   31 statement: FOR ROPAR FOR_EXPRESSION $@7 RCPAR . ROBRK optional_statements RCBRK
+    6 vars_decl: vars_decl COMMA $@2 var_decl .
 
-    ROBRK  shift, and go to state 90
+    $default  reduce using rule 6 (vars_decl)
 
 
 State 80
 
-   22 state: STATE_DEC ID ROBRK declarations $@6 optional_statements TRANSITION trans_state SEMICOLON RCBRK .
+   56 operations: ID ASSIGNOP $@18 math SEMICOLON .
 
-    $default  reduce using rule 22 (state)
+    $default  reduce using rule 56 (operations)
 
 
 State 81
 
-   49 math: math ADDOP $@14 . item
+   59 math: math ADDOP . $@19 item
 
-    INT     shift, and go to state 57
-    REALNO  shift, and go to state 58
-    ID      shift, and go to state 59
-    FUNC    shift, and go to state 60
+    $default  reduce using rule 58 ($@19)
 
-    item  go to state 91
+    $@19  go to state 91
 
 
 State 82
 
-   39 printf: QUOTE COMMA $@11 . vars
+   45 printf: QUOTE COMMA . $@14 vars
 
-    ID  shift, and go to state 35
+    $default  reduce using rule 44 ($@14)
 
-    var   go to state 92
-    vars  go to state 93
+    $@14  go to state 92
 
 
 State 83
 
-   36 statement: PRINTF $@10 ROPAR printf RCPAR SEMICOLON .
+   42 statement: PRINTF $@13 ROPAR printf RCPAR . SEMICOLON
 
-    $default  reduce using rule 36 (statement)
+    SEMICOLON  shift, and go to state 93
 
 
 State 84
 
-   59 comparison: ID RELOP INT .
+   69 comparison: ID RELOP . INT
+   70           | ID RELOP . ID
+   71           | ID RELOP . FUNC
 
-    $default  reduce using rule 59 (comparison)
+    INT   shift, and go to state 94
+    ID    shift, and go to state 95
+    FUNC  shift, and go to state 96
 
 
 State 85
 
-   60 comparison: ID RELOP ID .
+   40 statement: IF ROPAR $@11 comparison_list RCPAR . ROBRK $@12 optional_statements RCBRK
 
-    $default  reduce using rule 60 (comparison)
+    ROBRK  shift, and go to state 97
 
 
 State 86
 
-   61 comparison: ID RELOP FUNC .
+   66 comparison_list: comparison_list AND . $@20 comparison
 
-    $default  reduce using rule 61 (comparison)
+    $default  reduce using rule 65 ($@20)
+
+    $@20  go to state 98
 
 
 State 87
 
-   34 statement: IF ROPAR $@8 comparison_list RCPAR ROBRK . $@9 optional_statements RCBRK
+   68 comparison_list: comparison_list OR . $@21 comparison
 
-    $default  reduce using rule 33 ($@9)
+    $default  reduce using rule 67 ($@21)
 
-    $@9  go to state 94
+    $@21  go to state 99
 
 
 State 88
 
-   56 comparison_list: comparison_list AND $@15 . comparison
+   37 statement: FOR ROPAR FOR_EXPRESSION $@10 RCPAR . ROBRK optional_statements RCBRK
 
-    ID  shift, and go to state 65
-
-    comparison  go to state 95
+    ROBRK  shift, and go to state 100
 
 
 State 89
 
-   58 comparison_list: comparison_list OR $@16 . comparison
+   28 state: STATE_DEC ID $@8 ROBRK declarations $@9 optional_statements TRANSITION trans_state SEMICOLON RCBRK .
 
-    ID  shift, and go to state 65
-
-    comparison  go to state 96
+    $default  reduce using rule 28 (state)
 
 
 State 90
 
-   31 statement: FOR ROPAR FOR_EXPRESSION $@7 RCPAR ROBRK . optional_statements RCBRK
+   53 assign: ASSIGNOP $@17 math .
+   59 math: math . ADDOP $@19 item
 
-    ID        shift, and go to state 26
-    INSERT_C  shift, and go to state 27
-    PRINTF    shift, and go to state 28
-    IF        shift, and go to state 29
-    FOR       shift, and go to state 30
+    ADDOP  shift, and go to state 81
 
-    ID        [reduce using rule 26 (optional_statements)]
-    INSERT_C  [reduce using rule 26 (optional_statements)]
-    PRINTF    [reduce using rule 26 (optional_statements)]
-    IF        [reduce using rule 26 (optional_statements)]
-    FOR       [reduce using rule 26 (optional_statements)]
-    $default  reduce using rule 26 (optional_statements)
-
-    optional_statements  go to state 97
-    statement_list       go to state 32
-    statement            go to state 33
-    operations           go to state 34
+    $default  reduce using rule 53 (assign)
 
 
 State 91
 
-   49 math: math ADDOP $@14 item .
+   59 math: math ADDOP $@19 . item
 
-    $default  reduce using rule 49 (math)
+    INT     shift, and go to state 64
+    REALNO  shift, and go to state 65
+    ID      shift, and go to state 66
+    FUNC    shift, and go to state 67
+
+    item  go to state 101
 
 
 State 92
 
-   41 vars: var .
+   45 printf: QUOTE COMMA $@14 . vars
 
-    $default  reduce using rule 41 (vars)
+    ID  shift, and go to state 102
+
+    vars  go to state 103
+    var   go to state 104
 
 
 State 93
 
-   39 printf: QUOTE COMMA $@11 vars .
-   43 vars: vars . COMMA $@12 var
+   42 statement: PRINTF $@13 ROPAR printf RCPAR SEMICOLON .
 
-    COMMA  shift, and go to state 98
-
-    $default  reduce using rule 39 (printf)
+    $default  reduce using rule 42 (statement)
 
 
 State 94
 
-   34 statement: IF ROPAR $@8 comparison_list RCPAR ROBRK $@9 . optional_statements RCBRK
+   69 comparison: ID RELOP INT .
 
-    ID        shift, and go to state 26
-    INSERT_C  shift, and go to state 27
-    PRINTF    shift, and go to state 28
-    IF        shift, and go to state 29
-    FOR       shift, and go to state 30
-
-    ID        [reduce using rule 26 (optional_statements)]
-    INSERT_C  [reduce using rule 26 (optional_statements)]
-    PRINTF    [reduce using rule 26 (optional_statements)]
-    IF        [reduce using rule 26 (optional_statements)]
-    FOR       [reduce using rule 26 (optional_statements)]
-    $default  reduce using rule 26 (optional_statements)
-
-    optional_statements  go to state 99
-    statement_list       go to state 32
-    statement            go to state 33
-    operations           go to state 34
+    $default  reduce using rule 69 (comparison)
 
 
 State 95
 
-   56 comparison_list: comparison_list AND $@15 comparison .
+   70 comparison: ID RELOP ID .
 
-    $default  reduce using rule 56 (comparison_list)
+    $default  reduce using rule 70 (comparison)
 
 
 State 96
 
-   58 comparison_list: comparison_list OR $@16 comparison .
+   71 comparison: ID RELOP FUNC .
 
-    $default  reduce using rule 58 (comparison_list)
+    $default  reduce using rule 71 (comparison)
 
 
 State 97
 
-   24 optional_statements: optional_statements . statement_list
-   31 statement: FOR ROPAR FOR_EXPRESSION $@7 RCPAR ROBRK optional_statements . RCBRK
+   40 statement: IF ROPAR $@11 comparison_list RCPAR ROBRK . $@12 optional_statements RCBRK
 
-    ID        shift, and go to state 26
-    INSERT_C  shift, and go to state 27
-    PRINTF    shift, and go to state 28
-    IF        shift, and go to state 29
-    FOR       shift, and go to state 30
-    RCBRK     shift, and go to state 100
+    $default  reduce using rule 39 ($@12)
 
-    statement_list  go to state 44
-    statement       go to state 33
-    operations      go to state 34
+    $@12  go to state 105
 
 
 State 98
 
-   43 vars: vars COMMA . $@12 var
+   66 comparison_list: comparison_list AND $@20 . comparison
 
-    $default  reduce using rule 42 ($@12)
+    ID  shift, and go to state 72
 
-    $@12  go to state 101
+    comparison  go to state 106
 
 
 State 99
 
-   24 optional_statements: optional_statements . statement_list
-   34 statement: IF ROPAR $@8 comparison_list RCPAR ROBRK $@9 optional_statements . RCBRK
+   68 comparison_list: comparison_list OR $@21 . comparison
 
-    ID        shift, and go to state 26
-    INSERT_C  shift, and go to state 27
-    PRINTF    shift, and go to state 28
-    IF        shift, and go to state 29
-    FOR       shift, and go to state 30
-    RCBRK     shift, and go to state 102
+    ID  shift, and go to state 72
 
-    statement_list  go to state 44
-    statement       go to state 33
-    operations      go to state 34
+    comparison  go to state 107
 
 
 State 100
 
-   31 statement: FOR ROPAR FOR_EXPRESSION $@7 RCPAR ROBRK optional_statements RCBRK .
+   37 statement: FOR ROPAR FOR_EXPRESSION $@10 RCPAR ROBRK . optional_statements RCBRK
 
-    $default  reduce using rule 31 (statement)
+    ID        shift, and go to state 27
+    INSERT_C  shift, and go to state 28
+    PRINTF    shift, and go to state 29
+    IF        shift, and go to state 30
+    FOR       shift, and go to state 31
+
+    ID        [reduce using rule 32 (optional_statements)]
+    INSERT_C  [reduce using rule 32 (optional_statements)]
+    PRINTF    [reduce using rule 32 (optional_statements)]
+    IF        [reduce using rule 32 (optional_statements)]
+    FOR       [reduce using rule 32 (optional_statements)]
+    $default  reduce using rule 32 (optional_statements)
+
+    optional_statements  go to state 108
+    statement_list       go to state 33
+    statement            go to state 34
+    operations           go to state 35
 
 
 State 101
 
-   43 vars: vars COMMA $@12 . var
+   59 math: math ADDOP $@19 item .
 
-    ID  shift, and go to state 35
-
-    var  go to state 103
+    $default  reduce using rule 59 (math)
 
 
 State 102
 
-   34 statement: IF ROPAR $@8 comparison_list RCPAR ROBRK $@9 optional_statements RCBRK .
+   51 var: ID . $@16 assign
 
-    $default  reduce using rule 34 (statement)
+    $default  reduce using rule 50 ($@16)
+
+    $@16  go to state 109
 
 
 State 103
 
-   43 vars: vars COMMA $@12 var .
+   45 printf: QUOTE COMMA $@14 vars .
+   49 vars: vars . COMMA $@15 var
 
-    $default  reduce using rule 43 (vars)
+    COMMA  shift, and go to state 110
+
+    $default  reduce using rule 45 (printf)
+
+
+State 104
+
+   47 vars: var .
+
+    $default  reduce using rule 47 (vars)
+
+
+State 105
+
+   40 statement: IF ROPAR $@11 comparison_list RCPAR ROBRK $@12 . optional_statements RCBRK
+
+    ID        shift, and go to state 27
+    INSERT_C  shift, and go to state 28
+    PRINTF    shift, and go to state 29
+    IF        shift, and go to state 30
+    FOR       shift, and go to state 31
+
+    ID        [reduce using rule 32 (optional_statements)]
+    INSERT_C  [reduce using rule 32 (optional_statements)]
+    PRINTF    [reduce using rule 32 (optional_statements)]
+    IF        [reduce using rule 32 (optional_statements)]
+    FOR       [reduce using rule 32 (optional_statements)]
+    $default  reduce using rule 32 (optional_statements)
+
+    optional_statements  go to state 111
+    statement_list       go to state 33
+    statement            go to state 34
+    operations           go to state 35
+
+
+State 106
+
+   66 comparison_list: comparison_list AND $@20 comparison .
+
+    $default  reduce using rule 66 (comparison_list)
+
+
+State 107
+
+   68 comparison_list: comparison_list OR $@21 comparison .
+
+    $default  reduce using rule 68 (comparison_list)
+
+
+State 108
+
+   30 optional_statements: optional_statements . statement_list
+   37 statement: FOR ROPAR FOR_EXPRESSION $@10 RCPAR ROBRK optional_statements . RCBRK
+
+    ID        shift, and go to state 27
+    INSERT_C  shift, and go to state 28
+    PRINTF    shift, and go to state 29
+    IF        shift, and go to state 30
+    FOR       shift, and go to state 31
+    RCBRK     shift, and go to state 112
+
+    statement_list  go to state 46
+    statement       go to state 34
+    operations      go to state 35
+
+
+State 109
+
+   51 var: ID $@16 . assign
+
+    ASSIGNOP  shift, and go to state 60
+
+    $default  reduce using rule 54 (assign)
+
+    assign  go to state 113
+
+
+State 110
+
+   49 vars: vars COMMA . $@15 var
+
+    $default  reduce using rule 48 ($@15)
+
+    $@15  go to state 114
+
+
+State 111
+
+   30 optional_statements: optional_statements . statement_list
+   40 statement: IF ROPAR $@11 comparison_list RCPAR ROBRK $@12 optional_statements . RCBRK
+
+    ID        shift, and go to state 27
+    INSERT_C  shift, and go to state 28
+    PRINTF    shift, and go to state 29
+    IF        shift, and go to state 30
+    FOR       shift, and go to state 31
+    RCBRK     shift, and go to state 115
+
+    statement_list  go to state 46
+    statement       go to state 34
+    operations      go to state 35
+
+
+State 112
+
+   37 statement: FOR ROPAR FOR_EXPRESSION $@10 RCPAR ROBRK optional_statements RCBRK .
+
+    $default  reduce using rule 37 (statement)
+
+
+State 113
+
+   51 var: ID $@16 assign .
+
+    $default  reduce using rule 51 (var)
+
+
+State 114
+
+   49 vars: vars COMMA $@15 . var
+
+    ID  shift, and go to state 102
+
+    var  go to state 116
+
+
+State 115
+
+   40 statement: IF ROPAR $@11 comparison_list RCPAR ROBRK $@12 optional_statements RCBRK .
+
+    $default  reduce using rule 40 (statement)
+
+
+State 116
+
+   49 vars: vars COMMA $@15 var .
+
+    $default  reduce using rule 49 (vars)

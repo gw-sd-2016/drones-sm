@@ -1,0 +1,18 @@
+#include<stdio.h>
+
+#States
+State A{
+	integer x = 9 + j, i = 0;
+	transition B;
+}
+State B{
+	integer q;
+		
+	transition C;
+}
+
+State C{
+
+	transition C;
+}
+#EndStates

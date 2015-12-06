@@ -32,14 +32,20 @@ static FILE* enumfile;
 %token ASSIGNOP AND OR STRING BANG IF_EXPRESSION
 %token <integer> MULOP ADDOP
 %type <character> type // union structure for storing type by single character
-%type <integer> expression simple_expression factor term sign statement
+%type <integer> /*expression simple_expression factor term sign*/ statement
 %%
 
-identifier_list: var
-| identifier_list COMMA {fprintf(cfile, ", ");}var
+identifier_list: vars_decl
+| identifier_list COMMA {fprintf(cfile, ", ");}vars_decl
 ;
 
-var: ID {create_var($1, v_type, NOSTYPE, scope); fprintf(cfile, "%s", $1);};
+vars_decl: var_decl
+|vars_decl COMMA {fprintf(cfile, ", ");} var_decl
+;
+
+var_decl: ID {create_var($1, v_type, NOSTYPE, scope); fprintf(cfile, "%s", $1);} assign
+|
+;
 
 declarations:declarations type {
 	if(v_type == 0){    
@@ -82,7 +88,7 @@ states: state {eprintf("Single State detected\n");}
 |states state {eprintf("Multiple States Detected\n");}
 ;
 
-state: STATE_DEC ID ROBRK declarations{fprintf(cfile,"state_%s:\n",$2);fprintf(mainfile,"&&state_%s,",$2);scope = $2;} optional_statements TRANSITION trans_state SEMICOLON RCBRK{
+state: STATE_DEC ID{scope = $2;}ROBRK declarations{fprintf(cfile,"state_%s:\n",$2);fprintf(mainfile,"&&state_%s,",$2);} optional_statements TRANSITION trans_state SEMICOLON RCBRK{
 	fprintf(cfile, "\n\n");
 };
 
@@ -118,7 +124,11 @@ vars: var
 |vars COMMA {fprintf(cfile, ", ");} var
 ;
 
-var:ID {fprintf(cfile, "%s",$1);};
+var:ID {fprintf(cfile, "%s", $1);} assign
+   
+assign: ASSIGNOP {fprintf(cfile, " = ");} math
+|
+;
 
 operations: ID ASSIGNOP {eprintf("ID ASSIGNOP math pre line num %d\n", yylineno);fprintf(cfile,"%s = ", $1);}
 math SEMICOLON{fprintf(cfile,";\n"); eprintf("ID ASSIGNOP math post\n");}
@@ -147,7 +157,7 @@ comparison: ID RELOP INT {fprintf(cfile,"%s %s %d",$1,$2,$3);eprintf("ID REL INT
 
 
 
-
+/*
 expression: {eprintf("HELLOSLFLDKSJFLSKJFLKSDJF\n");} 
 |simple_expression { $$ = $1; }
 |simple_expression RELOP simple_expression { eprintf("Simple Expresion relop\n"); }
@@ -173,6 +183,7 @@ factor: ID {
 
 sign:ADDOP { $$ = $1; }
 ;
+*/
 
 %%
 yyerror(char *s){
