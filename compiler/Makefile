@@ -5,10 +5,10 @@ DEBUG= -DDEBUG
 BIN=YAPL.exe
 
 #Set AUTORUN to auto run the program after compilation
-#AUTORUN= -DAUTORUN
+AUTORUN= -DAUTORUN
 
 YAPL.exe: parser.tab.o lex.yy.o
-	gcc $(EDEBUG) $(AUTORUN) parser.tab.c lex.yy.c -lfl -o $@ -w
+	gcc $(AUTORUN) parser.tab.c lex.yy.c -lfl -o $@ -w
 
 parser.tab.o: parser.y
 	bison -v -d parser.y
@@ -18,7 +18,7 @@ lex.yy.o: scanner.l
 	flex scanner.l
 
 debug: parser.tab.o lex.yy.o
-	gcc $(EDEBUG) $(DEBUG) $(AUTORUN) parser.tab.c lex.yy.c -lfl -o $(BIN) -w
+	gcc $(EDEBUG) $(DEBUG) parser.tab.c lex.yy.c -lfl -o $(BIN) -w
 
 
 clean: 
