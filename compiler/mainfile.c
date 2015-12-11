@@ -1,43 +1,46 @@
 #include "secondary.h"
 #include "function_declares.h"
-#include <stdio.h>
-#include <pthread.h>
-
-void* add(int a);
+#include<stdio.h>
 int main(int argc, char* argv[]){
-    void* states[] = {&&state_A,&&state_B,&&state_C,};
+void* states[] = {&&state_A,&&state_B,&&state_C,};
 
-    if(argc > 1){
-        void* ptr = states[atoi(argv[1])];
-        goto *ptr;
-    }
-    int x = 9, i = 1;
+if(argc > 1){
+void* ptr = states[atoi(argv[1])];
+goto *ptr;
+}
+int x, i;
+char y;
+double w;
 state_A:
-    printf("X = %d, I = %d\n",x,i);
-    pthread_t add_thread;
-    void* status;
-    pthread_attr_t attr;
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-    pthread_create(&add_thread, &attr, add, (int) &x);
-    pthread_join(add_thread, &status);
-    printf("x = %d i = %d",x,i);
-    goto state_B;
+x = 1 + 9;
+for(i= 0; i <= 7; i++ ){
+printf("loop 1a x: %d i: %d\n",x, i);
+}
+printf("Embeded in the code\n");if(1){printf("Inside if\n");}printf("After if\n");	
+if(x <= 9){
+printf("if 1a x: %d\n",x);
+}
+for(x = 0; x <= 10; x++){
+printf("loop 2a x: %d\n",x);
+}
+goto state_B;
 
 
-    int q;
+int q;
 state_B:
-    goto state_C;
+q = 9;
+if(q <= 9){
+printf("if 1b q: %d\n",q);
+}
+for(x = 2; x <= q ;x++){
+printf("loop 1b x: %d q: %d\n",x, q);
+}
+goto state_C;
 
 
 state_C:
-    return 0;
-    goto state_C;
+goto state_C;
 
-}
 
-void* add(int a){
-    int b = 0;
-    printf("x = %d i = %d\n", a, b);
-    return a + b;
+
 }

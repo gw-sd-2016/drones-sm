@@ -199,7 +199,11 @@ int main(int argc, char* argv[]) {
 	//fprintf(fp,"#include <stdio.h>\n#include <stdlib.h>\n\nint main(){\nprintf(\"IM PRINTING\\n\");\n}\n");
 	//fclose(fp);
 	++argv; --argc;
-	yyin = fopen(argv[0], "r");
+	//yyin = fopen(argv[0], "r");
+	char input[255];
+	sprintf(input, "python formatter.py %s", argv[0]);
+	system(input);
+	yyin = fopen("new_yapl.txt", "r");
 	fprintf(cfile, "if(argc > 1){\nvoid* ptr = states[atoi(argv[1])];\ngoto *ptr;\n}\n");
 	yyparse();
 	fprintf(cfile, "\n}");
