@@ -8,10 +8,12 @@ close(cfile);*/
 
 char* scope = "GLOBAL";      // 0 means the global scope
 var_types v_type = -1;
+int num_embedded = 0;
 extern int yylineno;
 static FILE* cfile;// = fopen("cfile.c", "w+");
 static FILE* mainfile;
-static FILE* enumfile;
+static FILE* embedded;
+static FILE* struct_file;
 %}
 
 %union{
@@ -25,7 +27,7 @@ static FILE* enumfile;
 %token <real> REALNO // union structure for storing real number
 %token <string> ID   // union structure for storing identifier's name
 %token <string> FOR_EXPRESSION INSERT_C
-%token <string> FUNC RELOP PRINTF QUOTE INCLUDE
+%token <string> FUNC RELOP PRINTF QUOTE INCLUDE PPMM
 %token PROGRAM INTEGER REAL VAR
 %token BEGINT END STATE_DEC IF FOR THEN ELSE DO  
 %token ROPAR RCPAR ROBRK RCBRK DOT SEMICOLON COMMA COLON TRANSITION
@@ -36,36 +38,56 @@ static FILE* enumfile;
 %%
 
 identifier_list: vars_decl
-| identifier_list COMMA {fprintf(cfile, ", ");}vars_decl
+| identifier_list COMMA {fprintf(struct_file, ", ");/*TODO*/fprintf(cfile, ", ");}vars_decl
 ;
 
 vars_decl: var_decl
-|vars_decl COMMA {fprintf(cfile, ", ");} var_decl
+|vars_decl COMMA {fprintf(struct_file,", ");/*TODO*/fprintf(cfile, ";\n");} var_decl
 ;
 
-var_decl: ID {create_var($1, v_type, NOSTYPE, scope); fprintf(cfile, "%s", $1);} assign
+var_decl: ID {create_var($1, v_type, NOSTYPE, scope);fprintf(struct_file, "%s", $1);/*TODO*/fprintf(cfile, "%s_S.%s", scope, $1);} assign_var
 |
+;
+
+assign_var: ASSIGNOP {/*fprintf(struct_file, " = ");*//*TODO*/fprintf(cfile, " = ");} math_var
+|
+;
+
+math_var: item_var 
+|math_var ADDOP{/*fprintf(struct_file, " %s ", $2);*//*TODO*/fprintf(cfile, " %s ", $2);}item_var
+;
+
+item_var:ID {/*fprintf(struct_file,"%s",$1);*//*TODO*/fprintf(cfile,"%s",$1);}
+|REALNO {eprintf("ADDING IN REALNO %d\n",yylineno);/*fprintf(struct_file,"%f",$1);*//*TODO*/fprintf(cfile,"%f",$1);}
+|INT {/*fprintf(struct_file,"%d",$1);*//*TODO*/fprintf(cfile,"%d",$1);}
+|FUNC {eprintf("STATEMENT ID FUNCTION\n");/*fprintf(struct_file,"%s",$1);*//*TODO*/fprintf(cfile,"%s",$1);}
 ;
 
 declarations:declarations type {
 	if(v_type == 0){    
-		fprintf(cfile, "int ", v_type);
+		fprintf(struct_file, "int ");
+		//fprintf(cfile, "int ", v_type);
 	}if(v_type == 1){    
-		fprintf(cfile, "double ", v_type);
+		fprintf(struct_file, "double ");
+		//fprintf(cfile, "double ", v_type);
 	}if(v_type == 2){    
-		fprintf(cfile, "char ", v_type);
+		fprintf(struct_file, "char ");
+		//fprintf(cfile, "char ", v_type);
 	}
-} identifier_list SEMICOLON{fprintf(cfile, ";\n");}
+} identifier_list SEMICOLON{fprintf(struct_file,";\n");fprintf(cfile, ";\n");}
 |type {
 	if(v_type == 0){    
-		fprintf(cfile, "int ", v_type);
+		fprintf(struct_file, "int ");
+		//fprintf(cfile, "int ", v_type);
 	}if(v_type == 1){    
-		fprintf(cfile, "double ", v_type);
+		fprintf(struct_file, "double ");
+		//fprintf(cfile, "double ", v_type);
 	}if(v_type == 2){    
-		fprintf(cfile, "char ", v_type);
+		fprintf(struct_file, "char ");
+		//fprintf(cfile, "char ", v_type);
 	}
 
-} identifier_list SEMICOLON{fprintf(cfile, ";\n");}
+} identifier_list SEMICOLON{fprintf(struct_file,";\n");fprintf(cfile, ";\n");}
 |
 ;
 
@@ -74,8 +96,8 @@ type: INTEGER {v_type = INTE; eprintf("its an INTEGER %d\n", v_type);}
 |STRING{v_type = STR; eprintf("its a STRING\n");}
 ;
 
-program: {fprintf(mainfile, "#include \"secondary.h\"\n#include \"function_declares.h\"\n");} includes
-       BEGINT {fprintf(mainfile, "int main(int argc, char* argv[]){\nvoid* states[] = {");} states END {fprintf(mainfile, "};\n\n");eprintf("Parsed compound statements\n");}
+program: {fprintf(mainfile, "#include <pthread.h>\n#include \"structs.c\"\n#include \"embedded.h\"\n");} includes
+       BEGINT {fprintf(mainfile, "int main(int argc, char* argv[]){\npthread_t thread;\nvoid* states[] = {");} states END {fprintf(mainfile, "};\n\n");eprintf("Parsed compound statements\n");}
 ;
 
 includes: include
@@ -88,9 +110,15 @@ states: state {eprintf("Single State detected\n");}
 |states state {eprintf("Multiple States Detected\n");}
 ;
 
-state: STATE_DEC ID{scope = $2;}ROBRK declarations{fprintf(cfile,"state_%s:\n",$2);fprintf(mainfile,"&&state_%s,",$2);} optional_statements TRANSITION trans_state SEMICOLON RCBRK{
-	fprintf(cfile, "\n\n");
-};
+state: STATE_DEC ID{scope = $2; fprintf(struct_file, "typedef struct __state_%s{\n", $2);fprintf(cfile, "State_%s_Struct %s_S;\n",$2, $2);}
+		ROBRK 
+		declarations{fprintf(struct_file,"\n} State_%s_Struct;\n\n",$2);fprintf(cfile,"state_%s:\n",$2);fprintf(mainfile,"&&state_%s,",$2);} 
+		optional_statements
+		TRANSITION 
+		trans_state 
+		SEMICOLON 
+		RCBRK{fprintf(cfile, "\n\n");}
+;
 
 trans_state:ID {fprintf(cfile, "goto state_%s;\n",$1);}
 ;
@@ -105,7 +133,9 @@ statement_list: statement
 ;
 
 statement: operations {eprintf("operations found %d\n",yylineno);}
-|FOR ROPAR FOR_EXPRESSION{fprintf(cfile,"for(%s){\n", $3);}
+/*|FOR ROPAR FOR_EXPRESSION{fprintf(cfile,"for(%s){\n", $3);}
+RCPAR ROBRK optional_statements RCBRK {fprintf(cfile,"}\n");eprintf("FOR Statement done %d\n", yylineno);}*/
+|FOR ROPAR ID ASSIGNOP {fprintf(cfile,"for(%s_S.%s = ", scope, $3);}item SEMICOLON ID RELOP {fprintf(cfile,"; %s_S.%s %s ", scope, $8, $9);} item SEMICOLON ID PPMM {fprintf(cfile,"; %s_S.%s%s){\n",scope,$13,$14);}
 RCPAR ROBRK optional_statements RCBRK {fprintf(cfile,"}\n");eprintf("FOR Statement done %d\n", yylineno);}
 |IF ROPAR {fprintf(cfile,"if(");}comparison_list RCPAR ROBRK {fprintf(cfile, "){\n");} 
 optional_statements RCBRK{fprintf(cfile,"}\n"); eprintf("IF Statement discovered\n");}
@@ -113,24 +143,36 @@ optional_statements RCBRK{fprintf(cfile,"}\n"); eprintf("IF Statement discovered
 |INSERT_C {eprintf("embeded C code\n");
 	char* string = $1 + 9;
 	string[strlen(string) - 1] = '\0';
-	fprintf(cfile, "%s\n", string);}
+	fprintf(cfile, "\npthread_create(thread, NULL, %s_Embedded_%d, &%s_S );\n%s\n", scope, num_embedded, scope, string);
+	fprintf(embedded, "int %s_Embedded_%d(void* Stru){\nState_%s_Struct *%s_S = malloc(sizeof(State_%s_Struct));\n", scope, num_embedded, scope, scope, scope);
+	fprintf(embedded, "*%s_S = (State_%s_Struct*) Stru;\n", scope, scope);
+	fprintf(embedded, "\n%s\n}\n", string);
+	num_embedded++;
+}
 ;
 
-printf:QUOTE COMMA {eprintf("quote\n");fprintf(cfile,"%s,",$1);} vars
+printf:QUOTE COMMA {eprintf("quote\n");fprintf(cfile,"%s,",$1);} vars_print
 |QUOTE {eprintf("quote\n");fprintf(cfile,"%s",$1);}
 ;
 
+vars_print: var_print
+|vars_print COMMA {fprintf(cfile, ", ");} var_print
+;
+
+var_print:ID {fprintf(cfile, "%s_S.%s", scope, $1);} assign
+
+/*
 vars: var
 |vars COMMA {fprintf(cfile, ", ");} var
 ;
 
-var:ID {fprintf(cfile, "%s", $1);} assign
-   
+var:ID {fprintf(cfile, "%s_S.%s", scope, $1);} assign
+*/   
 assign: ASSIGNOP {fprintf(cfile, " = ");} math
 |
 ;
 
-operations: ID ASSIGNOP {eprintf("ID ASSIGNOP math pre line num %d\n", yylineno);fprintf(cfile,"%s = ", $1);}
+operations: ID ASSIGNOP {eprintf("ID ASSIGNOP math pre line num %d\n", yylineno);fprintf(cfile,"%s_S.%s = ", scope, $1);}
 math SEMICOLON{fprintf(cfile,";\n"); eprintf("ID ASSIGNOP math post\n");}
 ;
 
@@ -138,7 +180,7 @@ math: item
 |math ADDOP{fprintf(cfile, " %s ", $2);}item
 ;
 
-item:ID {fprintf(cfile,"%s",$1);}
+item:ID {fprintf(cfile,"%s_S.%s", scope, $1);}
 |REALNO {eprintf("ADDING IN REALNO %d\n",yylineno);fprintf(cfile,"%f",$1);}
 |INT {fprintf(cfile,"%d",$1);}
 |FUNC {eprintf("STATEMENT ID FUNCTION\n"); fprintf(cfile,"%s",$1);}
@@ -149,13 +191,10 @@ comparison_list: comparison {eprintf("Single comparison\n");}
 |comparison_list OR {fprintf(cfile, " || ");}comparison {eprintf("Or found\n");}
 ;
 
-comparison: ID RELOP INT {fprintf(cfile,"%s %s %d",$1,$2,$3);eprintf("ID REL INT\n");}
-|ID RELOP ID {fprintf(cfile,"%s %s %s",$1,$2,$3);eprintf("ID REL ID\n");}
-|ID RELOP FUNC {fprintf(cfile,"%s %s %s",$1,$2,$3);eprintf("ID REL FUNC\n");}
+comparison: ID RELOP INT {fprintf(cfile,"%s_S.%s %s %d",scope,$1,$2,$3);eprintf("ID REL INT\n");}
+|ID RELOP ID {fprintf(cfile,"%s_S.%s %s %s_S.%s",scope,$1,$2,scope,$3);eprintf("ID REL ID\n");}
+|ID RELOP FUNC {fprintf(cfile,"%s_S.%s %s %s",scope,$1,$2,$3);eprintf("ID REL FUNC\n");}
 ;
-
-
-
 
 /*
 expression: {eprintf("HELLOSLFLDKSJFLSKJFLKSDJF\n");} 
@@ -194,7 +233,8 @@ int main(int argc, char* argv[]) {
 	extern FILE* yyin;
 	cfile = fopen("cfile.c", "w+");
 	mainfile = fopen("mainfile.c", "w+");
-	enumfile = fopen("enumfile.c", "w+");
+	struct_file = fopen("structs.h", "w+");
+	embedded = fopen("embedded.h", "w+");
 	//FILE* fp = fopen("cfile.c", "w+");
 	//fprintf(fp,"#include <stdio.h>\n#include <stdlib.h>\n\nint main(){\nprintf(\"IM PRINTING\\n\");\n}\n");
 	//fclose(fp);
@@ -209,7 +249,8 @@ int main(int argc, char* argv[]) {
 	fprintf(cfile, "\n}");
 	fclose(mainfile);
 	fclose(cfile);
-	system("cat cfile.c >> mainfile.c; gcc mainfile.c -o test");
-	csystem("./test");
+	fclose(struct_file);
+	system("cat cfile.c >> mainfile.c; gcc mainfile.c -o program");
+	csystem("./program");
 	return 0;
 }

@@ -1,8 +1,48 @@
+#include <stdio.h>
+
 #States
-  integer x = 0;
-  x = 5;
-  while (x > 0) 
-    {
-      x = x - 1;
-    }
+State A{
+	integer x = 9, i;
+	string y;
+	real w;
+	print("x: %d\n", x);
+	for(i = 0; i <= 10; i++){
+		print("loop 1a x: %d i: %d\n", x, i);	
+	}
+
+	insert_c{
+		printf("Embeded in the code\n");
+		if(1){
+			printf("Inside if\n");
+		}
+		printf("After if\n");
+	}
+
+	if(x <= 9){
+		print("if 1a x: %d\n",x);	
+	}
+	for(x = 0; x <= 10; x++){
+		print("loop 2a x: %d\n",x);
+	}
+	
+	transition B;
+}
+State B{
+	integer q, x = 0;
+	q = 9;
+	if(q <= 9){
+		print("if 1b q: %d\n",q);
+	}
+	
+	for(x = 2; x <= q; x++){
+		print("loop 1b x: %d q: %d\n", x, q);
+	}
+		
+	transition C;
+}
+
+State C{
+
+	transition C;
+}
 #EndStates

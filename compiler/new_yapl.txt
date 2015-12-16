@@ -1,16 +1,14 @@
-#include<stdio.h>
+#include <stdio.h>
 
 #States
 State A{
-	integer x, i;
+	integer x = 9, i;
 	string y;
 	real w;
-	x = 1 + 9;
-	for(i= 0; i <= 7; i++ ){
+	print("x: %d\n", x);
+	for(i = 0; i <= 10; i++){
 		print("loop 1a x: %d i: %d\n", x, i);	
 	}
-
-insert_c{printf("Embeded in the code\n");if(1){printf("Inside if\n");}printf("After if\n");	}
 
 	if(x <= 9){
 		print("if 1a x: %d\n",x);	
@@ -22,13 +20,13 @@ insert_c{printf("Embeded in the code\n");if(1){printf("Inside if\n");}print
 	transition B;
 }
 State B{
-	integer q;
+	integer q, x = 0;
 	q = 9;
 	if(q <= 9){
 		print("if 1b q: %d\n",q);
 	}
 	
-	for(x = 2; x <= q ;x++){
+	for(x = 2; x <= q; x++){
 		print("loop 1b x: %d q: %d\n", x, q);
 	}
 		
