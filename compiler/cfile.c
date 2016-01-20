@@ -1,8 +1,8 @@
-void* start_ptr = &&state_A;
+void* start_ptr = states[0];
 State_GLOBAL_Struct GLOBAL_S;
 unsigned char* data = malloc(sizeof(GLOBAL_S));
 GLOBAL_S.test = 0;
-GLOBAL_S.uwotm8 = 69;
+GLOBAL_S.uwotm8 = 99;
 if(s){
 void* ptr = states[state];
 goto *ptr;
@@ -13,7 +13,7 @@ goto *start_ptr;
 begin:;
 state_A:;
 State_A_Struct A_S;
-A_S.x = -9;
+A_S.x = 9;
 A_S.i;
 A_S.y;
 A_S.w;
@@ -26,8 +26,6 @@ printf("x: %d\n",A_S.x);
 for(A_S.i = 0; A_S.i <= 10; A_S.i++){
 printf("loop 1a x: %d i: %d\n",A_S.x, A_S.i);
 }
-
-printf("Embeded in the code\n");if(1){printf("Inside if\n");}printf("After if\n");	
 if(A_S.x <= 9){
 printf("if 1a x: %d\n",A_S.x);
 }
