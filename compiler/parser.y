@@ -93,9 +93,9 @@ type: INTEGER {v_type = INTE; eprintf("its an INTEGER %d\n", v_type);}
 |STRING{v_type = STR; eprintf("its a STRING\n");}
 ;
 
-program: {fprintf(mainfile, "#include <sys/socket.h>\n#include <sys/types.h>\n#include <stdlib.h>\n#include <netdb.h>\n#include <string.h>\n#include <pthread.h>\n#include \"structs.h\"\n#include \"embedded.h\"\n");} includes 
-	{fprintf(struct_file, "typedef struct __state_%s{int Curr_State;\n", scope);fprintf(cfile, "State_%s_Struct %s_S;\nunsigned char* data = malloc(sizeof(GLOBAL_S));\n", scope, scope);} declarations {fprintf(struct_file,"\n} State_%s_Struct;\n\n", scope);}
-	BEGINT {fprintf(mainfile, "int main(int argc, char* argv[]){\nint sockfd, n;\nstruct sockaddr_in servaddr;\nsockfd=socket(AF_INET,SOCK_STREAM,0);\nbzero(&servaddr,sizeof servaddr);\nservaddr.sin_family=AF_INET;\nservaddr.sin_port=htons(22000);\ninet_pton(AF_INET,\"127.0.0.1\",&(servaddr.sin_addr));\nconnect(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));\npthread_t thread;\nvoid* states[] = {");} states END {fprintf(mainfile, "};\n\n");eprintf("Parsed compound statements\n");}
+program: {fprintf(mainfile, "#include <netinet/in.h>\n#include <inttypes.h>\n#include <unistd.h>\n#include <sys/socket.h>\n#include <sys/types.h>\n#include <stdlib.h>\n#include <netdb.h>\n#include <string.h>\n#include <pthread.h>\n#include \"structs.h\"\n#include \"embedded.h\"\n");} includes 
+	{fprintf(struct_file, "typedef struct __state_%s{int Curr_State;\n", scope);fprintf(cfile, "State_%s_Struct %s_S;\nunsigned char* data = malloc(sizeof(GLOBAL_S));\n", scope, scope); } declarations {fprintf(cfile, "if(argc > 1){\nvoid* ptr = states[atoi(argv[1])];\ngoto *ptr;\n}\n");fprintf(struct_file,"\n} State_%s_Struct;\n\n", scope);}
+	BEGINT {fprintf(mainfile, "int main(int argc, char* argv[]){\nint sockfd, n, o;\nchar *address = \"127.0.0.1\";\nwhile ((o = getopt (argc, argv, \"h:\")) != -1) {\nswitch(o){\ncase 'h':\naddress = optarg;\nbreak;\n}\n}\nstruct sockaddr_in servaddr;\nsockfd=socket(AF_INET,SOCK_STREAM,0);\nbzero(&servaddr,sizeof servaddr);\nservaddr.sin_family=AF_INET;\nservaddr.sin_port=htons(22000);\ninet_pton(AF_INET, address, &(servaddr.sin_addr));\nconnect(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));\npthread_t thread;\nvoid* states[] = {");} states END {fprintf(mainfile, "};\n\n");eprintf("Parsed compound statements\n");}
 ;
 
 includes: include
@@ -108,10 +108,10 @@ states: state {eprintf("Single State detected\n");}
 |states state {eprintf("Multiple States Detected\n");}
 ;
 
-state: STATE_DEC ID{scope = $2; fprintf(struct_file, "typedef struct __state_%s{State_GLOBAL_Struct G_Struct;\n", $2);fprintf(cfile, "State_%s_Struct %s_S;\n",$2, $2);}
+state: STATE_DEC ID{scope = $2; fprintf(struct_file, "typedef struct __state_%s{State_GLOBAL_Struct G_Struct;\n", $2);fprintf(cfile, "state_%s:;\nState_%s_Struct %s_S;\n",$2,$2, $2);}
 		ROBRK 
 		declarations{fprintf(struct_file,"\n} State_%s_Struct;\n\n",$2);
-fprintf(cfile,"%s_S.G_Struct = GLOBAL_S;\nstate_%s:\nGLOBAL_S.Curr_State = %d;\nmemcpy(data, &GLOBAL_S, sizeof(State_GLOBAL_Struct));\nwrite(sockfd, &GLOBAL_S, sizeof(State_GLOBAL_Struct));\n",$2,$2,num_states);num_states++;fprintf(mainfile,"&&state_%s,",$2);} 
+fprintf(cfile,"\n%s_S.G_Struct = GLOBAL_S;\nGLOBAL_S.Curr_State = %d;\nmemcpy(data, &GLOBAL_S, sizeof(State_GLOBAL_Struct));\nwrite(sockfd, &GLOBAL_S, sizeof(State_GLOBAL_Struct));\n",$2,num_states);num_states++;fprintf(mainfile,"&&state_%s,",$2);} 
 		optional_statements
 		TRANSITION trans_state SEMICOLON 
 		RCBRK{fprintf(cfile, "\n\n");}
@@ -244,7 +244,7 @@ int main(int argc, char* argv[]) {
 	sprintf(input, "python formatter.py %s", argv[0]);
 	system(input);
 	yyin = fopen("new_yapl.txt", "r");
-	fprintf(cfile, "if(argc > 1){\nvoid* ptr = states[atoi(argv[1])];\ngoto *ptr;\n}\n");
+	//fprintf(cfile, "if(argc > 1){\nvoid* ptr = states[atoi(argv[1])];\ngoto *ptr;\n}\n");
 	yyparse();
 	fprintf(cfile, "\n}");
 	fclose(mainfile);

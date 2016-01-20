@@ -1,18 +1,19 @@
-if(argc > 1){
-void* ptr = states[atoi(argv[1])];
-goto *ptr;
-}
 State_GLOBAL_Struct GLOBAL_S;
 unsigned char* data = malloc(sizeof(GLOBAL_S));
 GLOBAL_S.test = 0;
 GLOBAL_S.uwotm8 = 69;
+if(argc > 1){
+void* ptr = states[atoi(argv[1])];
+goto *ptr;
+}
+state_A:;
 State_A_Struct A_S;
 A_S.x = -9;
 A_S.i;
 A_S.y;
 A_S.w;
+
 A_S.G_Struct = GLOBAL_S;
-state_A:
 GLOBAL_S.Curr_State = 0;
 memcpy(data, &GLOBAL_S, sizeof(State_GLOBAL_Struct));
 write(sockfd, &GLOBAL_S, sizeof(State_GLOBAL_Struct));
@@ -31,11 +32,12 @@ printf("loop 2a x: %d\n",A_S.x);
 goto state_B;
 
 
+state_B:;
 State_B_Struct B_S;
 B_S.q;
 B_S.x = 0;
+
 B_S.G_Struct = GLOBAL_S;
-state_B:
 GLOBAL_S.Curr_State = 1;
 memcpy(data, &GLOBAL_S, sizeof(State_GLOBAL_Struct));
 write(sockfd, &GLOBAL_S, sizeof(State_GLOBAL_Struct));
@@ -49,9 +51,10 @@ printf("loop 1b x: %d q: %d\n",B_S.x, B_S.q);
 goto state_C;
 
 
+state_C:;
 State_C_Struct C_S;
+
 C_S.G_Struct = GLOBAL_S;
-state_C:
 GLOBAL_S.Curr_State = 2;
 memcpy(data, &GLOBAL_S, sizeof(State_GLOBAL_Struct));
 write(sockfd, &GLOBAL_S, sizeof(State_GLOBAL_Struct));
