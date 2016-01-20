@@ -3,8 +3,8 @@
 #include "defines.h"
 %}
 
-D [a-zA-Z]+[a-zA-Z0-9]*
-I [0-9]+
+D [a-zA-Z]+[a-zA-Z0-9\_\.\-\>]*
+I -?[0-9]+
 %option yylineno
 %%
 program {return PROGRAM ;}
@@ -25,6 +25,7 @@ program {return PROGRAM ;}
 "State"	{return STATE_DEC;}
 "transition" {eprintf("FOUND TRANSITION\n"); return TRANSITION;}
 "print"	{eprintf("print statement\n"); return PRINTF;}
+"GLOBAL"	{eprintf("Global variable found\n"); return GLOBALD;}
 \".*\"	{yylval.string = (char*)strdup(yytext); return QUOTE;}
 \#"include"\".*\"|\#"include"\ \".*\"	{eprintf("OTHER FOUND\n"); yylval.string = (char*)strdup(yytext); return INCLUDE;}
 \#"include"\<.*\>|\#"include"\ \<.*\>	{yylval.string = (char*)strdup(yytext); return INCLUDE;}

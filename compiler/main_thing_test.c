@@ -1,21 +1,8 @@
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <stdlib.h>
-#include <netdb.h>
-#include <string.h>
 #include <pthread.h>
 #include "structs.h"
 #include "embedded.h"
 #include <stdio.h>
 int main(int argc, char* argv[]){
-	int sockfd, n;
-	struct sockaddr_in servaddr;
-	sockfd=socket(AF_INET,SOCK_STREAM,0);
-	bzero(&servaddr,sizeof servaddr);
-	servaddr.sin_family=AF_INET;
-	servaddr.sin_port=htons(22000);
-	inet_pton(AF_INET,"127.0.0.1",&(servaddr.sin_addr));
-	connect(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));
 	pthread_t thread;
 	void* states[] = {&&state_A,&&state_B,&&state_C,};
 
@@ -23,10 +10,9 @@ int main(int argc, char* argv[]){
 		void* ptr = states[atoi(argv[1])];
 		goto *ptr;
 	}
-	State_GLOBAL_Struct GLOBAL_S;
-	unsigned char* data = malloc(sizeof(GLOBAL_S));
-	GLOBAL_S.test = 0;
-	GLOBAL_S.uwotm8 = 69;
+	State_GLOBAL_Struct *GLOBAL_S = malloc(sizeof(State_GLOBAL_Struct));
+	GLOBAL_S->test = 0;
+	GLOBAL_S->uwotm8 = 69;
 	State_A_Struct A_S;
 	A_S.x = -9;
 	A_S.i;
@@ -34,10 +20,10 @@ int main(int argc, char* argv[]){
 	A_S.w;
 	A_S.G_Struct = GLOBAL_S;
 state_A:
-	GLOBAL_S.Curr_State = 0;
-	memcpy(data, &GLOBAL_S, sizeof(State_GLOBAL_Struct));
-	write(sockfd, &GLOBAL_S, sizeof(State_GLOBAL_Struct));
-	printf("x: %d\n",A_S.x);
+	A_S.G_Struct->uwotm8 = 98;
+	printf("A_S: %d\n",A_S.G_Struct->uwotm8);
+	A_S.G_Struct->uwotm8 = 99;
+	printf("Global: %d\n",GLOBAL_S->uwotm8);
 	for(A_S.i = 0; A_S.i <= 10; A_S.i++){
 		printf("loop 1a x: %d i: %d\n",A_S.x, A_S.i);
 	}
@@ -57,9 +43,9 @@ state_A:
 	B_S.x = 0;
 	B_S.G_Struct = GLOBAL_S;
 state_B:
-	GLOBAL_S.Curr_State = 1;
-	memcpy(data, &GLOBAL_S, sizeof(State_GLOBAL_Struct));
-	write(sockfd, &GLOBAL_S, sizeof(State_GLOBAL_Struct));
+	A_S.G_Struct->uwotm8 = 9090;
+	printf("uwotm8: %d\n",B_S.G_Struct->uwotm8);
+	printf("uwotm8: %d\n",GLOBAL_S->uwotm8);
 	B_S.q = 9;
 	if(B_S.q <= 9){
 		printf("if 1b q: %d\n",B_S.q);
@@ -73,9 +59,6 @@ state_B:
 	State_C_Struct C_S;
 	C_S.G_Struct = GLOBAL_S;
 state_C:
-	GLOBAL_S.Curr_State = 2;
-	memcpy(data, &GLOBAL_S, sizeof(State_GLOBAL_Struct));
-	//write(sockfd, &GLOBAL_S, sizeof(State_GLOBAL_Struct));
 	goto state_C;
 
 

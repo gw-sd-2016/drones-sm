@@ -1,5 +1,6 @@
 #include <stdio.h>
-
+integer test = 0;
+integer uwotm8 = 99;
 #States
 State A{
 	integer x = 9, i;

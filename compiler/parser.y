@@ -2,15 +2,12 @@
 #include "defines.h"
 #include "var_tracker.c"
 
-/*FILE *cfile = fopen("CFILE.c", "w");
-fprintf(cfile, "Hello world\n");
-close(cfile);*/
-
-char* scope = "GLOBAL";      // 0 means the global scope
+char* scope = "GLOBAL";
 var_types v_type = -1;
 int num_embedded = 0;
+int num_states = 0;
 extern int yylineno;
-static FILE* cfile;// = fopen("cfile.c", "w+");
+static FILE* cfile;
 static FILE* mainfile;
 static FILE* embedded;
 static FILE* struct_file;
@@ -28,7 +25,7 @@ static FILE* struct_file;
 %token <string> ID   // union structure for storing identifier's name
 %token <string> FOR_EXPRESSION INSERT_C
 %token <string> FUNC RELOP PRINTF QUOTE INCLUDE PPMM
-%token PROGRAM INTEGER REAL VAR
+%token PROGRAM INTEGER REAL VAR GLOBALD
 %token BEGINT END STATE_DEC IF FOR THEN ELSE DO  
 %token ROPAR RCPAR ROBRK RCBRK DOT SEMICOLON COMMA COLON TRANSITION
 %token ASSIGNOP AND OR STRING BANG IF_EXPRESSION
@@ -96,8 +93,9 @@ type: INTEGER {v_type = INTE; eprintf("its an INTEGER %d\n", v_type);}
 |STRING{v_type = STR; eprintf("its a STRING\n");}
 ;
 
-program: {fprintf(mainfile, "#include <pthread.h>\n#include \"structs.c\"\n#include \"embedded.h\"\n");} includes
-       BEGINT {fprintf(mainfile, "int main(int argc, char* argv[]){\npthread_t thread;\nvoid* states[] = {");} states END {fprintf(mainfile, "};\n\n");eprintf("Parsed compound statements\n");}
+program: {fprintf(mainfile, "#include <sys/socket.h>\n#include <sys/types.h>\n#include <stdlib.h>\n#include <netdb.h>\n#include <string.h>\n#include <pthread.h>\n#include \"structs.h\"\n#include \"embedded.h\"\n");} includes 
+	{fprintf(struct_file, "typedef struct __state_%s{int Curr_State;\n", scope);fprintf(cfile, "State_%s_Struct %s_S;\nunsigned char* data = malloc(sizeof(GLOBAL_S));\n", scope, scope);} declarations {fprintf(struct_file,"\n} State_%s_Struct;\n\n", scope);}
+	BEGINT {fprintf(mainfile, "int main(int argc, char* argv[]){\nint sockfd, n;\nstruct sockaddr_in servaddr;\nsockfd=socket(AF_INET,SOCK_STREAM,0);\nbzero(&servaddr,sizeof servaddr);\nservaddr.sin_family=AF_INET;\nservaddr.sin_port=htons(22000);\ninet_pton(AF_INET,\"127.0.0.1\",&(servaddr.sin_addr));\nconnect(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));\npthread_t thread;\nvoid* states[] = {");} states END {fprintf(mainfile, "};\n\n");eprintf("Parsed compound statements\n");}
 ;
 
 includes: include
@@ -110,13 +108,12 @@ states: state {eprintf("Single State detected\n");}
 |states state {eprintf("Multiple States Detected\n");}
 ;
 
-state: STATE_DEC ID{scope = $2; fprintf(struct_file, "typedef struct __state_%s{\n", $2);fprintf(cfile, "State_%s_Struct %s_S;\n",$2, $2);}
+state: STATE_DEC ID{scope = $2; fprintf(struct_file, "typedef struct __state_%s{State_GLOBAL_Struct G_Struct;\n", $2);fprintf(cfile, "State_%s_Struct %s_S;\n",$2, $2);}
 		ROBRK 
-		declarations{fprintf(struct_file,"\n} State_%s_Struct;\n\n",$2);fprintf(cfile,"state_%s:\n",$2);fprintf(mainfile,"&&state_%s,",$2);} 
+		declarations{fprintf(struct_file,"\n} State_%s_Struct;\n\n",$2);
+fprintf(cfile,"%s_S.G_Struct = GLOBAL_S;\nstate_%s:\nGLOBAL_S.Curr_State = %d;\nmemcpy(data, &GLOBAL_S, sizeof(State_GLOBAL_Struct));\nwrite(sockfd, &GLOBAL_S, sizeof(State_GLOBAL_Struct));\n",$2,$2,num_states);num_states++;fprintf(mainfile,"&&state_%s,",$2);} 
 		optional_statements
-		TRANSITION 
-		trans_state 
-		SEMICOLON 
+		TRANSITION trans_state SEMICOLON 
 		RCBRK{fprintf(cfile, "\n\n");}
 ;
 
@@ -143,13 +140,16 @@ optional_statements RCBRK{fprintf(cfile,"}\n"); eprintf("IF Statement discovered
 |INSERT_C {eprintf("embeded C code\n");
 	char* string = $1 + 9;
 	string[strlen(string) - 1] = '\0';
-	fprintf(cfile, "\npthread_create(thread, NULL, %s_Embedded_%d, &%s_S );\n%s\n", scope, num_embedded, scope, string);
+	/*fprintf(cfile, "\npthread_create(thread, NULL, %s_Embedded_%d, &%s_S );\n%s\n", scope, num_embedded, scope, string);
 	fprintf(embedded, "int %s_Embedded_%d(void* Stru){\nState_%s_Struct *%s_S = malloc(sizeof(State_%s_Struct));\n", scope, num_embedded, scope, scope, scope);
 	fprintf(embedded, "*%s_S = (State_%s_Struct*) Stru;\n", scope, scope);
-	fprintf(embedded, "\n%s\n}\n", string);
+	fprintf(embedded, "\n%s\n}\n", string);*/
+	fprintf(cfile, "\n%s\n", string);
 	num_embedded++;
 }
 ;
+
+transition: TRANSITION trans_state;
 
 printf:QUOTE COMMA {eprintf("quote\n");fprintf(cfile,"%s,",$1);} vars_print
 |QUOTE {eprintf("quote\n");fprintf(cfile,"%s",$1);}
@@ -196,6 +196,8 @@ comparison: ID RELOP INT {fprintf(cfile,"%s_S.%s %s %d",scope,$1,$2,$3);eprintf(
 |ID RELOP FUNC {fprintf(cfile,"%s_S.%s %s %s",scope,$1,$2,$3);eprintf("ID REL FUNC\n");}
 ;
 
+
+
 /*
 expression: {eprintf("HELLOSLFLDKSJFLSKJFLKSDJF\n");} 
 |simple_expression { $$ = $1; }
@@ -218,8 +220,6 @@ factor: ID {
 	$$ = $1; }
 |ROPAR expression RCPAR { $$ = $2; }
 ;
-
-
 sign:ADDOP { $$ = $1; }
 ;
 */
@@ -250,7 +250,7 @@ int main(int argc, char* argv[]) {
 	fclose(mainfile);
 	fclose(cfile);
 	fclose(struct_file);
-	system("cat cfile.c >> mainfile.c; gcc mainfile.c -o program");
+	system("cat cfile.c >> mainfile.c; gcc mainfile.c -o program -lpthread");
 	csystem("./program");
 	return 0;
 }

@@ -22,4 +22,4 @@ debug: parser.tab.o lex.yy.o
 
 
 clean: 
-	rm parser.tab.* lex.yy.* YAPL.exe test
+	rm parser.tab.* lex.yy.* YAPL.exe program
