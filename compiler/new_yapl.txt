@@ -1,9 +1,10 @@
 #include <stdio.h>
 integer test = 0;
-integer uwotm8 = 99;
+integer uwotm8 = 69;
+
 #States
 State A{
-	integer x = 9, i;
+	integer x = -9, i;
 	string y;
 	real w;
 	print("x: %d\n", x);
@@ -11,8 +12,10 @@ State A{
 		print("loop 1a x: %d i: %d\n", x, i);	
 	}
 
+insert_c{printf("Embeded in the code\n");if(1){printf("Inside if\n");}printf("After if\n");	}
+
 	if(x <= 9){
-		print("if 1a x: %d\n",x);	
+		print("if 1a x: %d\n",x);
 	}
 	for(x = 0; x <= 10; x++){
 		print("loop 2a x: %d\n",x);
@@ -39,3 +42,4 @@ State C{
 	transition C;
 }
 #EndStates
+
