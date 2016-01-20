@@ -25,7 +25,7 @@ static FILE* struct_file;
 %token <string> ID   // union structure for storing identifier's name
 %token <string> FOR_EXPRESSION INSERT_C
 %token <string> FUNC RELOP PRINTF QUOTE INCLUDE PPMM
-%token PROGRAM INTEGER REAL VAR GLOBALD
+%token PROGRAM INTEGER REAL VAR GLOBALD START_STATE
 %token BEGINT END STATE_DEC IF FOR THEN ELSE DO  
 %token ROPAR RCPAR ROBRK RCBRK DOT SEMICOLON COMMA COLON TRANSITION
 %token ASSIGNOP AND OR STRING BANG IF_EXPRESSION
@@ -93,9 +93,13 @@ type: INTEGER {v_type = INTE; eprintf("its an INTEGER %d\n", v_type);}
 |STRING{v_type = STR; eprintf("its a STRING\n");}
 ;
 
-program: {fprintf(mainfile, "#include <netinet/in.h>\n#include <inttypes.h>\n#include <unistd.h>\n#include <sys/socket.h>\n#include <sys/types.h>\n#include <stdlib.h>\n#include <netdb.h>\n#include <string.h>\n#include <pthread.h>\n#include \"structs.h\"\n#include \"embedded.h\"\n");} includes 
-	{fprintf(struct_file, "typedef struct __state_%s{int Curr_State;\n", scope);fprintf(cfile, "State_%s_Struct %s_S;\nunsigned char* data = malloc(sizeof(GLOBAL_S));\n", scope, scope); } declarations {fprintf(cfile, "if(argc > 1){\nvoid* ptr = states[atoi(argv[1])];\ngoto *ptr;\n}\n");fprintf(struct_file,"\n} State_%s_Struct;\n\n", scope);}
-	BEGINT {fprintf(mainfile, "int main(int argc, char* argv[]){\nint sockfd, n, o;\nchar *address = \"127.0.0.1\";\nwhile ((o = getopt (argc, argv, \"h:\")) != -1) {\nswitch(o){\ncase 'h':\naddress = optarg;\nbreak;\n}\n}\nstruct sockaddr_in servaddr;\nsockfd=socket(AF_INET,SOCK_STREAM,0);\nbzero(&servaddr,sizeof servaddr);\nservaddr.sin_family=AF_INET;\nservaddr.sin_port=htons(22000);\ninet_pton(AF_INET, address, &(servaddr.sin_addr));\nconnect(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));\npthread_t thread;\nvoid* states[] = {");} states END {fprintf(mainfile, "};\n\n");eprintf("Parsed compound statements\n");}
+program: {fprintf(mainfile, "#include <netinet/in.h>\n#include <inttypes.h>\n#include <unistd.h>\n#include <sys/socket.h>\n#include <sys/types.h>\n#include <stdlib.h>\n#include <netdb.h>\n#include <string.h>\n#include <pthread.h>\n#include \"structs.h\"\n#include \"embedded.h\"\n");} includes start_state 
+	{fprintf(struct_file, "typedef struct __state_%s{int Curr_State;\n", scope);fprintf(cfile, "State_%s_Struct %s_S;\nunsigned char* data = malloc(sizeof(GLOBAL_S));\n", scope, scope); } declarations {fprintf(cfile, "if(s){\nvoid* ptr = states[state];\ngoto *ptr;\n}\nelse{\ngoto *start_ptr;\n}\nbegin:;\n");fprintf(struct_file,"\n} State_%s_Struct;\n\n", scope);}
+	BEGINT {fprintf(mainfile, "int main(int argc, char* argv[]){\nint sockfd, n, o, s = 0, state = 0;\nchar *address = \"127.0.0.1\";\nwhile ((o = getopt (argc, argv, \"h:\")) != -1) {\nswitch(o){\ncase 'h':\naddress = optarg;\nbreak;\ncase 's':\ns = 1;\nstate = atoi(optarg);\nbreak;\n}\n}\nstruct sockaddr_in servaddr;\nsockfd=socket(AF_INET,SOCK_STREAM,0);\nbzero(&servaddr,sizeof servaddr);\nservaddr.sin_family=AF_INET;\nservaddr.sin_port=htons(22000);\ninet_pton(AF_INET, address, &(servaddr.sin_addr));\nconnect(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));\npthread_t thread;\nvoid* states[] = {");} states END {fprintf(mainfile, "};\n\n");eprintf("Parsed compound statements\n");}
+;
+
+start_state: START_STATE ID {fprintf(cfile, "void* start_ptr = &&state_%s;\n", $2);}
+|{fprintf(cfile, "void* start_ptr = states[0];\n");}
 ;
 
 includes: include
@@ -235,11 +239,7 @@ int main(int argc, char* argv[]) {
 	mainfile = fopen("mainfile.c", "w+");
 	struct_file = fopen("structs.h", "w+");
 	embedded = fopen("embedded.h", "w+");
-	//FILE* fp = fopen("cfile.c", "w+");
-	//fprintf(fp,"#include <stdio.h>\n#include <stdlib.h>\n\nint main(){\nprintf(\"IM PRINTING\\n\");\n}\n");
-	//fclose(fp);
 	++argv; --argc;
-	//yyin = fopen(argv[0], "r");
 	char input[255];
 	sprintf(input, "python formatter.py %s", argv[0]);
 	system(input);

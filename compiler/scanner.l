@@ -19,6 +19,7 @@ program {return PROGRAM ;}
 ":"	{return COLON;}
 "string"	{return STRING;}
 "integer"	{return INTEGER;}
+"#start "	{return START_STATE;}
 "real"	{return REAL;}
 "#States"	{return BEGINT;}
 "#EndStates"	{return END;}

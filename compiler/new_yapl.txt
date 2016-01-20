@@ -1,4 +1,5 @@
 #include <stdio.h>
+#START A
 integer test = 0;
 integer uwotm8 = 69;
 
@@ -21,7 +22,7 @@ insert_c{printf("Embeded in the code\n");if(1){printf("Inside if\n");}print
 		print("loop 2a x: %d\n",x);
 	}
 	
-	transition B;
+	transition C;
 }
 State B{
 	integer q, x = 0;
@@ -34,7 +35,7 @@ State B{
 		print("loop 1b x: %d q: %d\n", x, q);
 	}
 		
-	transition C;
+	transition A;
 }
 
 State C{

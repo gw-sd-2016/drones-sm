@@ -1,11 +1,16 @@
+void* start_ptr = &&state_A;
 State_GLOBAL_Struct GLOBAL_S;
 unsigned char* data = malloc(sizeof(GLOBAL_S));
 GLOBAL_S.test = 0;
 GLOBAL_S.uwotm8 = 69;
-if(argc > 1){
-void* ptr = states[atoi(argv[1])];
+if(s){
+void* ptr = states[state];
 goto *ptr;
 }
+else{
+goto *start_ptr;
+}
+begin:;
 state_A:;
 State_A_Struct A_S;
 A_S.x = -9;
@@ -29,7 +34,7 @@ printf("if 1a x: %d\n",A_S.x);
 for(A_S.x = 0; A_S.x <= 10; A_S.x++){
 printf("loop 2a x: %d\n",A_S.x);
 }
-goto state_B;
+goto state_C;
 
 
 state_B:;
@@ -48,7 +53,7 @@ printf("if 1b q: %d\n",B_S.q);
 for(B_S.x = 2; B_S.x <= B_S.q; B_S.x++){
 printf("loop 1b x: %d q: %d\n",B_S.x, B_S.q);
 }
-goto state_C;
+goto state_A;
 
 
 state_C:;
