@@ -18,7 +18,7 @@ State A{
 		print("loop 2a x: %d\n",x);
 	}
 	
-	transition B;
+	transition C;
 }
 State B{
 	integer q, x = 0;
@@ -31,7 +31,7 @@ State B{
 		print("loop 1b x: %d q: %d\n", x, q);
 	}
 		
-	transition C;
+	transition A;
 }
 
 State C{
