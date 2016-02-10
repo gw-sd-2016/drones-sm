@@ -235,16 +235,23 @@ assign: ASSIGNOP {fprintf(cfile, " = ");} math
 ;
 
 operations: ID 
-			ASSIGNOP {eprintf("ID ASSIGNOP math pre line num %d\n", yylineno);fprintf(cfile,"%s_S.%s = ", scope, $1);}
+			ASSIGNOP {eprintf("ID ASSIGNOP math pre line num %d\n", yylineno);
+				int posi = get_position($1);
+				if(posi < 0){
+					fprintf(cfile,"%s_S.%s = ", scope, $1);
+				} else{ 
+					fprintf(cfile,"GLOBAL_S.%s = ", $1);
+				}
+			}
 			math 
 			SEMICOLON{
 				fprintf(cfile,";\n");
 				int posi = get_position($1);
 				if(posi >= 0){
-					fprintf(cfile, "char* data_%s = malloc(sizeof(%s_S.%s) + sizeof(int));\n",$1,scope,$1);
+					fprintf(cfile, "char* data_%s = malloc(sizeof(GLOBAL_S.%s) + sizeof(int));\n",$1,$1);
 					fprintf(cfile, "memcpy(data_%s, %d, sizeof(int));\n",$1,posi);
-					fprintf(cfile, "memcpy(&data_%s[4], &%s_S.%s, sizeof(int));\n",$1,scope,$1);
-					fprintf(cfile, "write(sockfd, &data_%s, (sizeof(%s_S.%s) + sizeof(int)));\n",$1,scope,$1);
+					fprintf(cfile, "memcpy(&data_%s[4], &GLOBAL_S.%s, sizeof(int));\n",$1,$1);
+					fprintf(cfile, "write(sockfd, &data_%s, (sizeof(GLOBAL_S.%s) + sizeof(int)));\n",$1,$1);
 				}
 				eprintf("ID ASSIGNOP math post\n");
 				

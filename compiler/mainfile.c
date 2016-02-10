@@ -55,6 +55,11 @@ A_S.y;
 A_S.w;
 A_S.x = 10;
 A_S.i = 1;
+GLOBAL_S.uwotm8 = 99;
+char* data_uwotm8 = malloc(sizeof(GLOBAL_S.uwotm8) + sizeof(int));
+memcpy(data_uwotm8, 1, sizeof(int));
+memcpy(&data_uwotm8[4], &GLOBAL_S.uwotm8, sizeof(int));
+write(sockfd, &data_uwotm8, (sizeof(GLOBAL_S.uwotm8) + sizeof(int)));
 printf("x: %d\n",A_S.x);
 for(A_S.i = 0; A_S.i <= 10; A_S.i++){
 printf("loop 1a x: %d i: %d\n",A_S.x, A_S.i);
