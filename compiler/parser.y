@@ -239,11 +239,15 @@ operations: ID
 			math 
 			SEMICOLON{
 				fprintf(cfile,";\n");
-				fprintf(cfile, "char* data_%s = malloc(sizeof(%s_S.%s) + sizeof(int));\n",$1,scope,$1);
-				fprintf(cfile, "memcpy(data_%s, get_position(\"%s\"), sizeof(int));\n",$1,$1);
-				fprintf(cfile, "memcpy(&data_%s[4], &%s_S.%s, sizeof(int));\n",$1,scope,$1);
-				fprintf(cfile, "write(sockfd, &data_%s, (sizeof(%s_S.%s) + sizeof(int)));\n",$1,scope,$1);
+				int posi = get_position($1);
+				if(posi >= 0){
+					fprintf(cfile, "char* data_%s = malloc(sizeof(%s_S.%s) + sizeof(int));\n",$1,scope,$1);
+					fprintf(cfile, "memcpy(data_%s, %d, sizeof(int));\n",$1,posi);
+					fprintf(cfile, "memcpy(&data_%s[4], &%s_S.%s, sizeof(int));\n",$1,scope,$1);
+					fprintf(cfile, "write(sockfd, &data_%s, (sizeof(%s_S.%s) + sizeof(int)));\n",$1,scope,$1);
+				}
 				eprintf("ID ASSIGNOP math post\n");
+				
 			}
 ;
 

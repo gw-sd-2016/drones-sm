@@ -186,5 +186,6 @@ int get_position(char* id){
 			//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
 			return temp->position;
 		}
+		return -1;
 	}
 }
