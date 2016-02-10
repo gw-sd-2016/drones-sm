@@ -6,6 +6,8 @@ State A{
 	integer x = 9, i;
 	string y;
 	real w;
+	x = 10;
+	i = 1;
 	print("x: %d\n", x);
 	for(i = 0; i <= 10; i++){
 		print("loop 1a x: %d i: %d\n", x, i);	

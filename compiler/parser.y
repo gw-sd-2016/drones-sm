@@ -1,11 +1,13 @@
 %{
 #include "defines.h"
 #include "var_tracker.c"
+#include <stddef.h>
 
 char* scope = "GLOBAL";
 var_types v_type = -1;
 int num_embedded = 0;
 int num_states = 0;
+int global = 1;
 extern int yylineno;
 static FILE* cfile;
 static FILE* mainfile;
@@ -34,6 +36,18 @@ static FILE* struct_file;
 %type <integer> /*expression simple_expression factor term sign*/ statement
 %%
 
+G_identifier_list: G_vars_decl
+| G_identifier_list COMMA {fprintf(struct_file, ", ");/*TODO*/fprintf(cfile, ", ");} G_vars_decl
+;
+
+G_vars_decl: G_var_decl
+|G_vars_decl COMMA {fprintf(struct_file,", ");/*TODO*/fprintf(cfile, ";\n");} G_var_decl
+;
+
+G_var_decl: ID {create_var($1, v_type, NOSTYPE, scope); print_list(); fprintf(struct_file, "%s", $1); printf("-----------\nPos of %s: %d\n-----------\n",$1, get_position($1));/*TODO*/fprintf(cfile, "%s_S.%s", scope, $1);} assign_var
+|
+;
+
 identifier_list: vars_decl
 | identifier_list COMMA {fprintf(struct_file, ", ");/*TODO*/fprintf(cfile, ", ");}vars_decl
 ;
@@ -42,7 +56,7 @@ vars_decl: var_decl
 |vars_decl COMMA {fprintf(struct_file,", ");/*TODO*/fprintf(cfile, ";\n");} var_decl
 ;
 
-var_decl: ID {create_var($1, v_type, NOSTYPE, scope);fprintf(struct_file, "%s", $1);/*TODO*/fprintf(cfile, "%s_S.%s", scope, $1);} assign_var
+var_decl: ID {create_var($1, v_type, NOSTYPE, scope); print_list(); fprintf(struct_file, "%s", $1); printf("-----------\nPos of %s: %d\n-----------\n",$1, get_position($1));/*TODO*/fprintf(cfile, "%s_S.%s", scope, $1);} assign_var
 |
 ;
 
@@ -88,14 +102,55 @@ declarations:declarations type {
 |
 ;
 
+G_declarations:G_declarations type {
+	if(v_type == 0){    
+		fprintf(struct_file, "int ");
+		//fprintf(cfile, "int ", v_type);
+	}if(v_type == 1){    
+		fprintf(struct_file, "double ");
+		//fprintf(cfile, "double ", v_type);
+	}if(v_type == 2){    
+		fprintf(struct_file, "char ");
+		//fprintf(cfile, "char ", v_type);
+	}
+} G_identifier_list SEMICOLON{fprintf(struct_file,";\n");fprintf(cfile, ";\n");}
+|type {
+	if(v_type == 0){    
+		fprintf(struct_file, "int ");
+		//fprintf(cfile, "int ", v_type);
+	}if(v_type == 1){    
+		fprintf(struct_file, "double ");
+		//fprintf(cfile, "double ", v_type);
+	}if(v_type == 2){    
+		fprintf(struct_file, "char ");
+		//fprintf(cfile, "char ", v_type);
+	}
+
+} G_identifier_list SEMICOLON{fprintf(struct_file,";\n");fprintf(cfile, ";\n");}
+|
+;
+
 type: INTEGER {v_type = INTE; eprintf("its an INTEGER %d\n", v_type);}
 |REAL{v_type = REL; eprintf("its a DOUBLE\n");}
 |STRING{v_type = STR; eprintf("its a STRING\n");}
 ;
 
-program: {fprintf(mainfile, "#include <netinet/in.h>\n#include <inttypes.h>\n#include <unistd.h>\n#include <sys/socket.h>\n#include <sys/types.h>\n#include <stdlib.h>\n#include <netdb.h>\n#include <string.h>\n#include <pthread.h>\n#include \"structs.h\"\n#include \"embedded.h\"\n");} includes start_state 
-	{fprintf(struct_file, "typedef struct __state_%s{int Curr_State;\n", scope);fprintf(cfile, "State_%s_Struct %s_S;\nunsigned char* data = malloc(sizeof(GLOBAL_S));\n", scope, scope); } declarations {fprintf(cfile, "if(s){\nvoid* ptr = states[state];\ngoto *ptr;\n}\nelse{\ngoto *start_ptr;\n}\nbegin:;\n");fprintf(struct_file,"\n} State_%s_Struct;\n\n", scope);}
-	BEGINT {fprintf(mainfile, "int main(int argc, char* argv[]){\nint sockfd, n, o, s = 0, state = 0;\nchar *address = \"127.0.0.1\";\nwhile ((o = getopt (argc, argv, \"h:s:\")) != -1) {\nswitch(o){\ncase 'h':\naddress = optarg;\nbreak;\ncase 's':\ns = 1;\nstate = atoi(optarg);\nbreak;\n}\n}\nstruct sockaddr_in servaddr;\nsockfd=socket(AF_INET,SOCK_STREAM,0);\nbzero(&servaddr,sizeof servaddr);\nservaddr.sin_family=AF_INET;\nservaddr.sin_port=htons(22000);\ninet_pton(AF_INET, address, &(servaddr.sin_addr));\nconnect(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));\npthread_t thread;\nvoid* states[] = {");} states END {fprintf(mainfile, "};\n\n");eprintf("Parsed compound statements\n");}
+program: {
+	fprintf(mainfile, "#include <stddef.h>\n#include <netinet/in.h>\n#include <inttypes.h>\n#include <unistd.h>\n#include <sys/socket.h>\n#include <sys/types.h>\n#include <stdlib.h>\n#include <netdb.h>\n#include <string.h>\n#include <pthread.h>\n#include \"structs.h\"\n");} 
+	includes 
+	start_state {
+		fprintf(struct_file, "typedef struct __state_%s{int Curr_State;\n", scope);
+		fprintf(cfile, "State_%s_Struct %s_S;\nunsigned char* data = malloc(sizeof(GLOBAL_S));\n", scope, scope);
+		printf("GLOBAL Declarations Start\n");
+	} 
+	G_declarations {
+		printf("GLOBAL Declarations End\n");
+		fprintf(cfile, "if(s){\nvoid* ptr = states[state];\ngoto *ptr;\n}\nelse{\ngoto *start_ptr;\n}\nbegin:;\n");
+		fprintf(struct_file,"\n} State_%s_Struct;\n\n", scope);
+	}
+	BEGINT {fprintf(mainfile, "int main(int argc, char* argv[]){\nint sockfd, n, o, s = 0, state = 0;\nchar *address = \"127.0.0.1\";\nwhile ((o = getopt (argc, argv, \"h:s:\")) != -1) {\nswitch(o){\ncase 'h':\naddress = optarg;\nbreak;\ncase 's':\ns = 1;\nstate = atoi(optarg);\nbreak;\n}\n}\nstruct sockaddr_in servaddr;\nsockfd=socket(AF_INET,SOCK_STREAM,0);\nbzero(&servaddr,sizeof servaddr);\nservaddr.sin_family=AF_INET;\nservaddr.sin_port=htons(22000);\ninet_pton(AF_INET, address, &(servaddr.sin_addr));\nconnect(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));\npthread_t thread;\nvoid* states[] = {");} 
+	states 
+	END {fprintf(mainfile, "};\n\n");eprintf("Parsed compound statements\n");}
 ;
 
 start_state: START_STATE ID {fprintf(cfile, "void* start_ptr = &&state_%s;\n", $2);}
@@ -114,9 +169,12 @@ states: state {eprintf("Single State detected\n");}
 
 state: STATE_DEC ID{scope = $2; fprintf(struct_file, "typedef struct __state_%s{State_GLOBAL_Struct G_Struct;\n", $2);fprintf(cfile, "state_%s:;\nState_%s_Struct %s_S;\n",$2,$2, $2);}
 		ROBRK 
-		declarations{fprintf(struct_file,"\n} State_%s_Struct;\n\n",$2);
-fprintf(cfile,"\n%s_S.G_Struct = GLOBAL_S;\nGLOBAL_S.Curr_State = %d;\nmemcpy(data, &GLOBAL_S, sizeof(State_GLOBAL_Struct));\nwrite(sockfd, &GLOBAL_S, sizeof(State_GLOBAL_Struct));\n",$2,num_states);num_states++;fprintf(mainfile,"&&state_%s,",$2);} 
-		optional_statements
+		declarations{fprintf(struct_file,"\n} State_%s_Struct;\n\n",$2);}
+		optional_statements{
+			fprintf(cfile,"\n%s_S.G_Struct = GLOBAL_S;\nGLOBAL_S.Curr_State = %d;\nmemcpy(data, &GLOBAL_S, sizeof(State_GLOBAL_Struct));\nwrite(sockfd, &GLOBAL_S, sizeof(State_GLOBAL_Struct));\n",$2,num_states);
+			num_states++;
+			fprintf(mainfile,"&&state_%s,",$2);
+		} 
 		TRANSITION trans_state SEMICOLON 
 		RCBRK{fprintf(cfile, "\n\n");}
 ;
@@ -176,8 +234,17 @@ assign: ASSIGNOP {fprintf(cfile, " = ");} math
 |
 ;
 
-operations: ID ASSIGNOP {eprintf("ID ASSIGNOP math pre line num %d\n", yylineno);fprintf(cfile,"%s_S.%s = ", scope, $1);}
-math SEMICOLON{fprintf(cfile,";\n"); eprintf("ID ASSIGNOP math post\n");}
+operations: ID 
+			ASSIGNOP {eprintf("ID ASSIGNOP math pre line num %d\n", yylineno);fprintf(cfile,"%s_S.%s = ", scope, $1);}
+			math 
+			SEMICOLON{
+				fprintf(cfile,";\n");
+				fprintf(cfile, "char* data_%s = malloc(sizeof(%s_S.%s) + sizeof(int));\n",$1,scope,$1);
+				fprintf(cfile, "memcpy(data_%s, get_position(\"%s\"), sizeof(int));\n",$1,$1);
+				fprintf(cfile, "memcpy(&data_%s[4], &%s_S.%s, sizeof(int));\n",$1,scope,$1);
+				fprintf(cfile, "write(sockfd, &data_%s, (sizeof(%s_S.%s) + sizeof(int)));\n",$1,scope,$1);
+				eprintf("ID ASSIGNOP math post\n");
+			}
 ;
 
 math: item 

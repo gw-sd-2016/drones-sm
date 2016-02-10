@@ -15,7 +15,7 @@
 #else
 # define dprintf(x...) ; 
 #endif
-*/
+ */
 
 
 typedef enum var_types{
@@ -47,8 +47,11 @@ typedef struct variable{
 	secondary_type stype;
 	char* scope; //Temporarily Global is
 	struct variable* next;
+	int position;
+	int size;
 }var;
 
+int pos = 0;
 var* declared_variables[64];
 
 int string_to_int(char* string);
@@ -62,7 +65,7 @@ void print_enum_info();
 
 int string_to_int(char* string){
 	int i = 0, string_val = 0;
-	
+
 	while(string[i] != '\0'){
 		string_val += (string[i] ^ i);
 		i++;
@@ -89,8 +92,8 @@ int add_var_dec(var* v){
 			dprintf("Current Declaration ID is: %s\nLooking for ID %s\n", temp->id, v->id);
 			if(!strcmp(temp->id, v->id)){
 				fprintf(stderr, "There is a duplicate variable declaration of %s within the scope %s\n", v->id, temp->scope);
-			    //system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
-                exit(-1);
+				//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
+				exit(-1);
 				return -1;
 			}
 			dprintf("\nThis was not a conflict\n");
@@ -101,7 +104,7 @@ int add_var_dec(var* v){
 			fprintf(stderr, "There is a duplicate variable declaration of %s within the scope %s\n", v->id, v->scope);
 			//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
 			exit(-1);
-            return -1;
+			return -1;
 		}
 		dprintf("Setting temp next to v\n");
 		temp->next = v;
@@ -116,6 +119,7 @@ int create_var(char* id, var_types t, secondary_type st, char* sc){
 	v->type = t;
 	v->stype = st;
 	v->scope = sc;
+	v->position = pos++;
 	dprintf("about to print scope\n");
 	dprintf("Var SCOPE: %s\n", v->id);
 	v->next = NULL;
@@ -135,13 +139,52 @@ int create_var(char* id, var_types t, secondary_type st, char* sc){
 	}
 }
 
-int is_declared(char* string){
-    return 1;
-}
-
 void print_enum_info(){
 	printf("Var Types Enums:\nINT: %d\nREAL: %d\n\n", INTE, REL);
 	printf("Secondary Types Enums:\nARRAY: %d\nFUNCTION: %d\nSTATE: %d\n\n", ARRAY, FUNCTION, STATE);
 	printf("Variable Scope Enums:\nGLOBAL: %d\nA: %d\nB: %d\nC: %d\nD: %d\nE: %d\n\n", GLOBAL, A, B, C, D, E);
 }
 
+void print_list(){
+	int i = 0;
+	var* tmp;
+	for(i = 0; i < 64; i++){
+		if(declared_variables[i]){
+			tmp = declared_variables[i];
+			while(tmp != NULL){
+				while(tmp != NULL){
+					dprintf("--------------------\n");
+					dprintf("Var ID: %s\nVar Scope: %s\nPosition: %d\n", tmp->id, tmp->scope, tmp->position);
+					dprintf("--------------------\n");
+					tmp = tmp->next;
+				}
+			}
+		}
+	}
+}
+
+int get_position(char* id){
+	int string_val;
+	string_val = string_to_int(id);
+	if(declared_variables[string_val] == NULL){
+		dprintf("FAILED - There is no current declaration that has the same hash BUCKET-%d\n\n", string_val);
+		return -1;
+	}else{
+		var* temp = declared_variables[string_val];
+		while(temp->next != NULL){
+			dprintf("Current Declaration ID is: %s\nLooking for ID %s\n", temp->id, id);
+			if(!strcmp(temp->id, id)){
+				dprintf("ID (%s) has been found - Position %d\n", id, temp->position);
+				//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
+				return temp->position;
+			}
+			dprintf("\nThis was not a conflict\n");
+			temp = temp->next;
+		}
+		if(!strcmp(temp->id, id) && !strcmp(temp->scope, "GLOBAL")){
+			dprintf("ID (%s) has been found - Position %d\n", id, temp->position);
+			//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
+			return temp->position;
+		}
+	}
+}

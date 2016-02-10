@@ -1,0 +1,18 @@
+#include <stdio.h>
+integer test = 0;
+integer uwotm8 = 99;
+#States
+State A{
+	
+	transition C;
+}
+State B{
+		
+	transition A;
+}
+
+State C{
+
+	transition C;
+}
+#EndStates
