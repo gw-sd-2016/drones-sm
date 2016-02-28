@@ -434,7 +434,7 @@ int main(int argc, char* argv[]) {
 	fclose(mainfile);
 	fclose(cfile);
 	fclose(struct_file);
-	system("cat cfile.c >> mainfile.c; gcc mainfile.c -o program -lpthread");
+	system("cat cfile.c >> mainfile.c;rm cfile.c new_yapl.txt embedded.h;gcc mainfile.c -o program -lpthread");
 	csystem("./program");
 	return 0;
 }
