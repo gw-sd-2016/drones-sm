@@ -2,6 +2,7 @@
 #Set CFLAGS for debugging printing
 EDEBUG= -DEDEBUG
 DEBUG= -DDEBUG
+FROMFILE = -DFILE_RESTORE
 BIN=YAPL.exe
 
 #Set AUTORUN to auto run the program after compilation
@@ -18,8 +19,7 @@ lex.yy.o: scanner.l
 	flex scanner.l
 
 debug: parser.tab.o lex.yy.o
-	gcc $(EDEBUG) $(DEBUG) parser.tab.c lex.yy.c -lfl -o $(BIN) -w
-
+	gcc $(EDEBUG) $(DEBUG) $(FROMFILE) parser.tab.c lex.yy.c -lfl -o $(BIN) -w
 
 clean: 
 	rm parser.tab.* lex.yy.* YAPL.exe program

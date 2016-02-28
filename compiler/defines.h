@@ -24,3 +24,9 @@
 # define dprintf(x...) ; 
 #endif
 
+#ifdef FILE_RESTORE
+# define ffprintf(x...) fprintf(x)
+#else
+# define ffprintf(x...) ; 
+#endif
+

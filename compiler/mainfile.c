@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include <time.h>
 #include <stddef.h>
 #include <netinet/in.h>
@@ -11,7 +12,8 @@
 #include <pthread.h>
 #include "structs.h"
 #include <stdio.h>
-void restore_global_values(State_GLOBAL_Struct *GLOBAL_S);
+void file_restore_global_values(State_GLOBAL_Struct *GLOBAL_S);
+void file_update_backup(int update_version, int position, int type, ...);
 
 int main(int argc, char* argv[]){
 int sockfd, n, o, s = 0, state = 0;
@@ -48,7 +50,7 @@ if( access("backup.txt", F_OK) != -1 ) {
 printf("BEFORE Value of first: %d\n", GLOBAL_S.test);
 printf("BEFORE Value of first: %d\n", GLOBAL_S.var1);
 printf("BEFORE Value of first: %d\n", GLOBAL_S.var2);
-restore_global_values(&GLOBAL_S);
+file_restore_global_values(&GLOBAL_S);
 printf("AFTER Value of first: %d\n", GLOBAL_S.test);
 printf("AFTER Value of first: %d\n", GLOBAL_S.var1);
 printf("AFTER Value of first: %d\n", GLOBAL_S.var2);
@@ -76,11 +78,13 @@ char* data_var1 = malloc(sizeof(GLOBAL_S.var1) + sizeof(int));
 memset(data_var1, 2, 1);
 memcpy(&data_var1[1], &GLOBAL_S.var1, sizeof(int));
 write(sockfd, &data_var1, (sizeof(GLOBAL_S.var1) + sizeof(int)));
+file_update_backup(9, 2, 0, GLOBAL_S.var1);
 GLOBAL_S.test = 1;
 GLOBAL_S.var1 = 9;
 memset(data_var1, 2, 1);
 memcpy(&data_var1[1], &GLOBAL_S.var1, sizeof(int));
 write(sockfd, &data_var1, (sizeof(GLOBAL_S.var1) + sizeof(int)));
+file_update_backup(9, 2, 0, GLOBAL_S.var1);
 GLOBAL_S.var2 = 9;
 printf("x: %d\n",A_S.x);
 GLOBAL_S.test = 1;
@@ -129,7 +133,7 @@ goto state_C;
 
 }
 
-void restore_global_values(State_GLOBAL_Struct *GLOBAL_S){
+void file_restore_global_values(State_GLOBAL_Struct *GLOBAL_S){
 FILE* restore = fopen("backup.txt", "r");
 char * value_char = NULL;
 int pos = 0;
@@ -143,4 +147,36 @@ memcpy(&GLOBAL_S->Curr_State + pos, &value, sizeof(int));
 }
 pos++;
 }
+}
+void file_update_backup(int update_versioni, int position, int type, ...){
+FILE* original = fopen("backup.txt", "r");
+FILE* temp = fopen("backup_temp.txt", "w");
+char * value_char = NULL;
+int pos = 0;
+va_list list;
+va_start(list, type);
+size_t len = 0;
+
+while ((getline(&value_char, &len, original)) != -1) {
+if(pos != position){
+fprintf(temp, "%s", value_char);
+}else {
+if(type == 0){
+fprintf(temp, "%d\n", va_arg(list, int));
+//printf("arg int\n");
+}else if(type == 1){
+fprintf(temp, "%f\n", va_arg(list, double));
+//printf("arg double\n");
+//fprintf(temp, "%s\n", value_char);
+}else if(type == 2){
+fprintf(temp, "%s\n", va_arg(list, char*));
+//printf("arg char*\n");
+}
+}
+pos++;
+}
+va_end(list);
+fclose(original);
+fclose(temp);
+system("cat backup_temp.txt > backup.txt;rm backup_temp.txt");
 }

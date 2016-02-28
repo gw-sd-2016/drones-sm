@@ -62,6 +62,7 @@ int create_var(char* id, var_types t, secondary_type st, char* sc, int vo, int b
 int simple_hash();
 int is_declared(char* string);
 int get_vol(char* id);
+int get_type(char* id);
 int get_position(char* id);
 void print_enum_info();
 
@@ -220,6 +221,34 @@ int get_position(char* id){
 			dprintf("ID (%s) has been found - Position %d\n", id, temp->position);
 			//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
 			return temp->position;
+		}
+		return -1;
+	}
+}
+
+int get_type(char* id){
+	int string_val;
+	string_val = string_to_int(id);
+	if(!strcmp(id, "Curr_State")) return 0;
+	if(declared_variables[string_val] == NULL){
+		dprintf("FAILED - There is no current declaration that has the same hash BUCKET-%d\n\n", string_val);
+		return -1;
+	}else{
+		var* temp = declared_variables[string_val];
+		while(temp->next != NULL){
+			dprintf("Current Declaration ID is: %s\nLooking for ID %s\n", temp->id, id);
+			if(!strcmp(temp->id, id)){
+				dprintf("ID (%s) has been found - Position %d\n", id, temp->position);
+				//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
+				return temp->type;
+			}
+			dprintf("\nThis was not a conflict\n");
+			temp = temp->next;
+		}
+		if(!strcmp(temp->id, id) && !strcmp(temp->scope, "GLOBAL")){
+			dprintf("ID (%s) has been found - Position %d\n", id, temp->position);
+			//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
+			return temp->type;
 		}
 		return -1;
 	}

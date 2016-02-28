@@ -199,7 +199,7 @@ type: INTEGER {v_type = INTE; eprintf("its an INTEGER %d\n", v_type);}
 ;
 
 program: {
-	fprintf(mainfile, "#include <time.h>\n#include <stddef.h>\n#include <netinet/in.h>\n#include <inttypes.h>\n#include <unistd.h>\n#include <sys/socket.h>\n#include <sys/types.h>\n#include <stdlib.h>\n#include <netdb.h>\n#include <string.h>\n#include <pthread.h>\n#include \"structs.h\"\n");} 
+	fprintf(mainfile, "#include <stdarg.h>\n#include <time.h>\n#include <stddef.h>\n#include <netinet/in.h>\n#include <inttypes.h>\n#include <unistd.h>\n#include <sys/socket.h>\n#include <sys/types.h>\n#include <stdlib.h>\n#include <netdb.h>\n#include <string.h>\n#include <pthread.h>\n#include \"structs.h\"\n");} 
 	includes 
 	start_state {
 		fprintf(struct_file, "typedef struct __state_%s{int Curr_State;\n", scope);
@@ -209,11 +209,11 @@ program: {
 	G_declarations {
 		eprintf("GLOBAL Declarations End\n");
 		fprintf(embedded,"//%s\ndsflksdfs\n","\%d");
-		fprintf(cfile, "if( access(\"backup.txt\", F_OK) != -1 ) {\n    printf(\"file exists\\n\");\nprintf(\"BEFORE Value of first: %s\\n\", GLOBAL_S.test);\nprintf(\"BEFORE Value of first: %s\\n\", GLOBAL_S.var1);\nprintf(\"BEFORE Value of first: %s\\n\", GLOBAL_S.var2);\nrestore_global_values(&GLOBAL_S);\nprintf(\"AFTER Value of first: %s\\n\", GLOBAL_S.test);\nprintf(\"AFTER Value of first: %s\\n\", GLOBAL_S.var1);\nprintf(\"AFTER Value of first: %s\\n\", GLOBAL_S.var2);\n} else {\n    printf(\"file doesn't exist\\n\");\n}\n","\%d","\%d","\%d","\%d","\%d","\%d");
+		fprintf(cfile, "if( access(\"backup.txt\", F_OK) != -1 ) {\n    printf(\"file exists\\n\");\nprintf(\"BEFORE Value of first: %s\\n\", GLOBAL_S.test);\nprintf(\"BEFORE Value of first: %s\\n\", GLOBAL_S.var1);\nprintf(\"BEFORE Value of first: %s\\n\", GLOBAL_S.var2);\nfile_restore_global_values(&GLOBAL_S);\nprintf(\"AFTER Value of first: %s\\n\", GLOBAL_S.test);\nprintf(\"AFTER Value of first: %s\\n\", GLOBAL_S.var1);\nprintf(\"AFTER Value of first: %s\\n\", GLOBAL_S.var2);\n} else {\n    printf(\"file doesn't exist\\n\");\n}\n","\%d","\%d","\%d","\%d","\%d","\%d");
 		fprintf(cfile, "if(s){\nvoid* ptr = states[state];\ngoto *ptr;\n}\nelse{\ngoto *start_ptr;\n}\nbegin:;\n");
 		fprintf(struct_file,"\n} State_%s_Struct;\n\n", scope);
 	}
-	BEGINT {fprintf(mainfile, "void restore_global_values(State_GLOBAL_Struct *GLOBAL_S);\n\nint main(int argc, char* argv[]){\nint sockfd, n, o, s = 0, state = 0;\nchar *address = \"127.0.0.1\";\nwhile ((o = getopt (argc, argv, \"h:s:\")) != -1) {\nswitch(o){\ncase 'h':\naddress = optarg;\nbreak;\ncase 's':\ns = 1;\nstate = atoi(optarg);\nbreak;\n}\n}\nstruct sockaddr_in servaddr;\nsockfd=socket(AF_INET,SOCK_STREAM,0);\nbzero(&servaddr,sizeof servaddr);\nservaddr.sin_family=AF_INET;\nservaddr.sin_port=htons(22000);\ninet_pton(AF_INET, address, &(servaddr.sin_addr));\nconnect(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));\npthread_t thread;\nvoid* states[] = {");} 
+	BEGINT {fprintf(mainfile, "void file_restore_global_values(State_GLOBAL_Struct *GLOBAL_S);\nvoid file_update_backup(int update_version, int position, int type, ...);\n\nint main(int argc, char* argv[]){\nint sockfd, n, o, s = 0, state = 0;\nchar *address = \"127.0.0.1\";\nwhile ((o = getopt (argc, argv, \"h:s:\")) != -1) {\nswitch(o){\ncase 'h':\naddress = optarg;\nbreak;\ncase 's':\ns = 1;\nstate = atoi(optarg);\nbreak;\n}\n}\nstruct sockaddr_in servaddr;\nsockfd=socket(AF_INET,SOCK_STREAM,0);\nbzero(&servaddr,sizeof servaddr);\nservaddr.sin_family=AF_INET;\nservaddr.sin_port=htons(22000);\ninet_pton(AF_INET, address, &(servaddr.sin_addr));\nconnect(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));\npthread_t thread;\nvoid* states[] = {");} 
 	states 
 	END {fprintf(mainfile, "};\n\n");eprintf("Parsed compound statements\n");}
 ;
@@ -355,6 +355,7 @@ operations: ID
 					fprintf(cfile, "memset(data_%s, %d, 1);\n",$2,posi);
 					fprintf(cfile, "memcpy(&data_%s[1], &GLOBAL_S.%s, sizeof(int));\n",$2,$2);
 					fprintf(cfile, "write(sockfd, &data_%s, (sizeof(GLOBAL_S.%s) + sizeof(int)));\n",$2,$2);
+					ffprintf(cfile, "file_update_backup(9, %d, %d, GLOBAL_S.%s);\n", posi, get_type($2), $2);
 				}
 				eprintf("ID ASSIGNOP math post\n");
 				
@@ -428,7 +429,8 @@ int main(int argc, char* argv[]) {
 	yyin = fopen("new_yapl.txt", "r");
 	//fprintf(cfile, "if(argc > 1){\nvoid* ptr = states[atoi(argv[1])];\ngoto *ptr;\n}\n");
 	yyparse();
-	fprintf(cfile, "\n}\n\nvoid restore_global_values(State_GLOBAL_Struct *GLOBAL_S){\nFILE* restore = fopen(\"backup.txt\", \"r\");\nchar * value_char = NULL;\nint pos = 0;\nint value = 0;\nsize_t len = 0;\nwhile ((getline(&value_char, &len, restore)) != -1) {\nif(strcmp(value_char, \"\\n\")){\nvalue = atoi(value_char);\nmemcpy(&GLOBAL_S->Curr_State + pos, &value, sizeof(int));\n//printf(\"Retrieved: %s at position: %s\\n\", value, pos);\n}\npos++;\n}\n}\n","\%d","\%d");
+	fprintf(cfile, "\n}\n\nvoid file_restore_global_values(State_GLOBAL_Struct *GLOBAL_S){\nFILE* restore = fopen(\"backup.txt\", \"r\");\nchar * value_char = NULL;\nint pos = 0;\nint value = 0;\nsize_t len = 0;\nwhile ((getline(&value_char, &len, restore)) != -1) {\nif(strcmp(value_char, \"\\n\")){\nvalue = atoi(value_char);\nmemcpy(&GLOBAL_S->Curr_State + pos, &value, sizeof(int));\n//printf(\"Retrieved: %s at position: %s\\n\", value, pos);\n}\npos++;\n}\n}\n","\%d","\%d");
+	ffprintf(cfile, "void file_update_backup(int update_versioni, int position, int type, ...){\nFILE* original = fopen(\"backup.txt\", \"r\");\nFILE* temp = fopen(\"backup_temp.txt\", \"w\");\nchar * value_char = NULL;\nint pos = 0;\nva_list list;\nva_start(list, type);\nsize_t len = 0;\n\nwhile ((getline(&value_char, &len, original)) != -1) {\nif(pos != position){\nfprintf(temp, \"%s\", value_char);\n}else {\nif(type == 0){\nfprintf(temp, \"%s\\n\", va_arg(list, int));\n//printf(\"arg int\\n\");\n}else if(type == 1){\nfprintf(temp, \"%s\\n\", va_arg(list, double));\n//printf(\"arg double\\n\");\n//fprintf(temp, \"%s\\n\", value_char);\n}else if(type == 2){\nfprintf(temp, \"%s\\n\", va_arg(list, char*));\n//printf(\"arg char*\\n\");\n}\n}\npos++;\n}\nva_end(list);\nfclose(original);\nfclose(temp);\nsystem(\"cat backup_temp.txt > backup.txt;rm backup_temp.txt\");\n}\n", "\%s", "\%d", "\%f", "\%s", "\%s");
 	fclose(mainfile);
 	fclose(cfile);
 	fclose(struct_file);
