@@ -48,6 +48,8 @@ typedef struct variable{
 	char* scope; //Temporarily Global is
 	struct variable* next;
 	int position;
+	int vol;
+	int backup;
 	int size;
 }var;
 
@@ -56,9 +58,11 @@ var* declared_variables[64];
 
 int string_to_int(char* string);
 int add_var_dec(var* v);
-int create_var(char* id, var_types t, secondary_type st, char* sc);
+int create_var(char* id, var_types t, secondary_type st, char* sc, int vo, int b);
 int simple_hash();
 int is_declared(char* string);
+int get_vol(char* id);
+int get_position(char* id);
 void print_enum_info();
 
 /*--------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -76,6 +80,7 @@ int string_to_int(char* string){
 }
 
 int add_var_dec(var* v){
+	if(!strcmp(v->id, "Curr_State")) return -1;
 	int string_val;
 	dprintf("Declaring variable\n");
 	dprintf("Var ID: %s\nVar Type: %d\nVar SType: %d\nVar Scope: %s\n\n",v->id, v->type, v->stype, v->scope);
@@ -90,7 +95,7 @@ int add_var_dec(var* v){
 		var* temp = declared_variables[string_val];
 		while(temp->next != NULL){
 			dprintf("Current Declaration ID is: %s\nLooking for ID %s\n", temp->id, v->id);
-			if(!strcmp(temp->id, v->id)){
+			if((!strcmp(temp->id, v->id) && !strcmp(temp->scope, v->scope)) || (!strcmp(temp->id, v->id) && !strcmp(temp->scope, "GLOBAL"))){
 				fprintf(stderr, "There is a duplicate variable declaration of %s within the scope %s\n", v->id, temp->scope);
 				//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
 				exit(-1);
@@ -100,7 +105,7 @@ int add_var_dec(var* v){
 			temp = temp->next;
 		}
 		dprintf("After while loop Current Declaration ID is: %s\nLooking for ID %s\nScope v: %s\nScope temp: %s\n", temp->id, v->id, v->scope, temp->scope);
-		if(!strcmp(temp->id, v->id) && !strcmp(temp->scope, v->scope)){
+		if(!strcmp(temp->id, v->id) && !strcmp(temp->scope, v->scope) || (!strcmp(temp->id, v->id) && !strcmp(temp->scope, "GLOBAL"))){
 			fprintf(stderr, "There is a duplicate variable declaration of %s within the scope %s\n", v->id, v->scope);
 			//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
 			exit(-1);
@@ -113,13 +118,15 @@ int add_var_dec(var* v){
 	dprintf("DONE WITH ADD\n");
 }
 
-int create_var(char* id, var_types t, secondary_type st, char* sc){
+int create_var(char* id, var_types t, secondary_type st, char* sc, int vo, int b){
 	var* v = malloc(sizeof(var));
 	v->id = id;
 	v->type = t;
 	v->stype = st;
 	v->scope = sc;
-	v->position = pos++;
+	v->position = ++pos;
+	v->vol = vo;
+	v->backup = b;
 	dprintf("about to print scope\n");
 	dprintf("Var SCOPE: %s\n", v->id);
 	v->next = NULL;
@@ -163,9 +170,37 @@ void print_list(){
 	}
 }
 
+int get_volatile(char* id){
+	int string_val;
+	string_val = string_to_int(id);
+	if(declared_variables[string_val] == NULL){
+		dprintf("FAILED - There is no current declaration that has the same hash BUCKET-%d\n\n", string_val);
+		return 0;
+	}else{
+		var* temp = declared_variables[string_val];
+		while(temp->next != NULL){
+			dprintf("Current Declaration ID is: %s\nLooking for ID %s\n", temp->id, id);
+			if(!strcmp(temp->id, id)){
+				dprintf("ID (%s) has been found - Position %d\n", id, temp->position);
+				//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
+				return temp->vol;
+			}
+			dprintf("\nThis was not a conflict\n");
+			temp = temp->next;
+		}
+		if(!strcmp(temp->id, id) && !strcmp(temp->scope, "GLOBAL")){
+			dprintf("ID (%s) has been found - Position %d\n", id, temp->position);
+			//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
+			return temp->vol;
+		}
+		return 0;
+	}
+}
+
 int get_position(char* id){
 	int string_val;
 	string_val = string_to_int(id);
+	if(!strcmp(id, "Curr_State")) return 0;
 	if(declared_variables[string_val] == NULL){
 		dprintf("FAILED - There is no current declaration that has the same hash BUCKET-%d\n\n", string_val);
 		return -1;
@@ -187,5 +222,34 @@ int get_position(char* id){
 			return temp->position;
 		}
 		return -1;
+	}
+}
+
+int get_backup(char* id){
+	int string_val;
+	string_val = string_to_int(id);
+	if(declared_variables[string_val] == NULL){
+		dprintf("FAILED - There is no current declaration that has the same hash BUCKET-%d\n\n", string_val);
+		return 1;
+	}else{
+		var* temp = declared_variables[string_val];
+		while(temp->next != NULL){
+			dprintf("Current Declaration ID is: %s\nLooking for ID %s\n", temp->id, id);
+			if(!strcmp(temp->id, id)){
+				dprintf("ID (%s) has been found - Position %d\n", id, temp->position);
+				//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
+				if(temp->backup == -1) return -1;
+				return temp->backup++;
+			}
+			dprintf("\nThis was not a conflict\n");
+			temp = temp->next;
+		}
+		if(!strcmp(temp->id, id) && !strcmp(temp->scope, "GLOBAL")){
+			dprintf("ID (%s) has been found - Position %d\n", id, temp->position);
+			//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
+			if(temp->backup == -1) return -1;
+			return temp->backup++;
+		}
+		return 1;
 	}
 }

@@ -1,6 +1,7 @@
 typedef struct __state_GLOBAL{int Curr_State;
 int test;
-int uwotm8;
+int var1;
+int var2;
 
 } State_GLOBAL_Struct;
 

@@ -1,6 +1,9 @@
 #include <stdio.h>
+#start A 
 integer test = 0;
-integer uwotm8 = 99;
+volatile integer var1 = 99;
+nobackup integer var2 = 0;
+
 #States
 State A{
 	integer x = 9, i;
@@ -8,13 +11,18 @@ State A{
 	real w;
 	x = 10;
 	i = 1;
-	uwotm8 = 99;
+	var1 = 999;
+	test = 1;
+	var1 = 9;
+	var2 = 9;
 	print("x: %d\n", x);
+	test = 1;
 	for(i = 0; i <= 10; i++){
 		print("loop 1a x: %d i: %d\n", x, i);	
 	}
 
 	if(x <= 9){
+		transition C;
 		print("if 1a x: %d\n",x);	
 	}
 	for(x = 0; x <= 10; x++){

@@ -17,6 +17,8 @@ program {return PROGRAM ;}
 ","	{return COMMA;}
 "var"	{return VAR;}
 ":"	{return COLON;}
+"volatile"	{return VOLATILE;}
+"nobackup"	{return NOBACKUP;}
 "string"	{return STRING;}
 "integer"	{return INTEGER;}
 "#start "	{return START_STATE;}

@@ -1,3 +1,4 @@
+#include <time.h>
 #include <stddef.h>
 #include <netinet/in.h>
 #include <inttypes.h>
@@ -10,6 +11,8 @@
 #include <pthread.h>
 #include "structs.h"
 #include <stdio.h>
+void restore_global_values(State_GLOBAL_Struct *GLOBAL_S);
+
 int main(int argc, char* argv[]){
 int sockfd, n, o, s = 0, state = 0;
 char *address = "127.0.0.1";
@@ -32,13 +35,26 @@ servaddr.sin_port=htons(22000);
 inet_pton(AF_INET, address, &(servaddr.sin_addr));
 connect(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));
 pthread_t thread;
-void* states[] = {&&state_A,&&state_B,&&state_C,};
+void* states[] = {&&state_A,&&state_A,&&state_B,&&state_C,};
 
-void* start_ptr = states[0];
+void* start_ptr = &&state_A;
 State_GLOBAL_Struct GLOBAL_S;
 unsigned char* data = malloc(sizeof(GLOBAL_S));
 GLOBAL_S.test = 0;
-GLOBAL_S.uwotm8 = 99;
+GLOBAL_S.var1 = 99;
+GLOBAL_S.var2 = 0;
+if( access("backup.txt", F_OK) != -1 ) {
+    printf("file exists\n");
+printf("BEFORE Value of first: %d\n", GLOBAL_S.test);
+printf("BEFORE Value of first: %d\n", GLOBAL_S.var1);
+printf("BEFORE Value of first: %d\n", GLOBAL_S.var2);
+restore_global_values(&GLOBAL_S);
+printf("AFTER Value of first: %d\n", GLOBAL_S.test);
+printf("AFTER Value of first: %d\n", GLOBAL_S.var1);
+printf("AFTER Value of first: %d\n", GLOBAL_S.var2);
+} else {
+    printf("file doesn't exist\n");
+}
 if(s){
 void* ptr = states[state];
 goto *ptr;
@@ -55,16 +71,29 @@ A_S.y;
 A_S.w;
 A_S.x = 10;
 A_S.i = 1;
-GLOBAL_S.uwotm8 = 99;
-char* data_uwotm8 = malloc(sizeof(GLOBAL_S.uwotm8) + sizeof(int));
-memcpy(data_uwotm8, 1, sizeof(int));
-memcpy(&data_uwotm8[4], &GLOBAL_S.uwotm8, sizeof(int));
-write(sockfd, &data_uwotm8, (sizeof(GLOBAL_S.uwotm8) + sizeof(int)));
+GLOBAL_S.var1 = 999;
+char* data_var1 = malloc(sizeof(GLOBAL_S.var1) + sizeof(int));
+memset(data_var1, 2, 1);
+memcpy(&data_var1[1], &GLOBAL_S.var1, sizeof(int));
+write(sockfd, &data_var1, (sizeof(GLOBAL_S.var1) + sizeof(int)));
+GLOBAL_S.test = 1;
+GLOBAL_S.var1 = 9;
+memset(data_var1, 2, 1);
+memcpy(&data_var1[1], &GLOBAL_S.var1, sizeof(int));
+write(sockfd, &data_var1, (sizeof(GLOBAL_S.var1) + sizeof(int)));
+GLOBAL_S.var2 = 9;
 printf("x: %d\n",A_S.x);
+GLOBAL_S.test = 1;
 for(A_S.i = 0; A_S.i <= 10; A_S.i++){
 printf("loop 1a x: %d i: %d\n",A_S.x, A_S.i);
 }
 if(A_S.x <= 9){
+
+A_S.G_Struct = GLOBAL_S;
+GLOBAL_S.Curr_State = 0;
+memcpy(data, &GLOBAL_S, sizeof(State_GLOBAL_Struct));
+write(sockfd, &GLOBAL_S, sizeof(State_GLOBAL_Struct));
+goto state_C;
 printf("if 1a x: %d\n",A_S.x);
 }
 for(A_S.x = 0; A_S.x <= 10; A_S.x++){
@@ -72,7 +101,7 @@ printf("loop 2a x: %d\n",A_S.x);
 }
 
 A_S.G_Struct = GLOBAL_S;
-GLOBAL_S.Curr_State = 0;
+GLOBAL_S.Curr_State = 1;
 memcpy(data, &GLOBAL_S, sizeof(State_GLOBAL_Struct));
 write(sockfd, &GLOBAL_S, sizeof(State_GLOBAL_Struct));
 goto state_C;
@@ -89,23 +118,29 @@ printf("if 1b q: %d\n",B_S.q);
 for(B_S.x = 2; B_S.x <= B_S.q; B_S.x++){
 printf("loop 1b x: %d q: %d\n",B_S.x, B_S.q);
 }
-
-B_S.G_Struct = GLOBAL_S;
-GLOBAL_S.Curr_State = 1;
-memcpy(data, &GLOBAL_S, sizeof(State_GLOBAL_Struct));
-write(sockfd, &GLOBAL_S, sizeof(State_GLOBAL_Struct));
 goto state_A;
 
 
 state_C:;
 State_C_Struct C_S;
-
-C_S.G_Struct = GLOBAL_S;
-GLOBAL_S.Curr_State = 2;
-memcpy(data, &GLOBAL_S, sizeof(State_GLOBAL_Struct));
-write(sockfd, &GLOBAL_S, sizeof(State_GLOBAL_Struct));
 goto state_C;
 
 
 
+}
+
+void restore_global_values(State_GLOBAL_Struct *GLOBAL_S){
+FILE* restore = fopen("backup.txt", "r");
+char * value_char = NULL;
+int pos = 0;
+int value = 0;
+size_t len = 0;
+while ((getline(&value_char, &len, restore)) != -1) {
+if(strcmp(value_char, "\n")){
+value = atoi(value_char);
+memcpy(&GLOBAL_S->Curr_State + pos, &value, sizeof(int));
+//printf("Retrieved: %d at position: %d\n", value, pos);
+}
+pos++;
+}
 }
