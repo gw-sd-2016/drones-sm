@@ -1,9 +1,0 @@
-#include<stdio.h>
-
-#States
-State B{
-	integer q;
-	q = 9;		
-	transition B;
-}
-#EndStates

@@ -50,11 +50,15 @@ int main(int argc , char *argv[])
     puts("Connection accepted");
      
     //Receive a message from client
+	State_GLOBAL_Struct GLOBAL_S;
+	
     while( (read_size = recv(client_sock , client_message , 2000 , 0)) > 0 )
     {
         //Send the message back to client
 		//write(client_sock , client_message , strlen(client_message));
-		printf("Simple hello\n");
+		memcpy(&GLOBAL_S, client_message, sizeof(State_GLOBAL_Struct));
+		//GLOBAL_S.send = 9;
+		printf("Simple hello: %d\n", GLOBAL_S.send);
 	}
      
     if(read_size == 0)

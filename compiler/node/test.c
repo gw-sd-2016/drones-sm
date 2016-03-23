@@ -136,7 +136,7 @@ state_D:;
 		goto state_Recv;
 
 state_E:;
-		send(sockf, "down2", strlen("down2"),0);
+		send(sockf, "flipleft", strlen("flipleft"),0);
 		GLOBAL_S.Curr_State += 1;
 		usleep(1105);
 		printf("Next State: %d\n", GLOBAL_S.Curr_State);

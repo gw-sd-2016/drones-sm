@@ -1,0 +1,13 @@
+#include <stdio.h>
+#start A
+volatile integer send = 0;
+
+#States
+State A{
+	print("Sending var %d\n", GLOBAL_S.send);
+    send = send + 1;
+	transition A;
+}
+
+#EndStates
+

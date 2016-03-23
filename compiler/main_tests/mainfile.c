@@ -16,7 +16,7 @@ void file_restore_global_values(State_GLOBAL_Struct *GLOBAL_S);
 void file_update_backup(int update_version, int position, int type, ...);
 
 int main(int argc, char* argv[]){
-	int sockfd, n, o, s = 0, state = 0;
+	int sockfd, n, o, s = 0, state = 2;
 	char *address = "127.0.0.1";
 	while ((o = getopt (argc, argv, "h:s:")) != -1) {
 		switch(o){
@@ -54,7 +54,6 @@ int main(int argc, char* argv[]){
 		printf("AFTER Value of first: %d\n", GLOBAL_S.test);
 		printf("AFTER Value of first: %d\n", GLOBAL_S.var1);
 		printf("AFTER Value of first: %d\n", GLOBAL_S.var2);
-		file_update_backup(9, 2, 0, GLOBAL_S.var1);
 	} else {
 		printf("file doesn't exist\n");
 	}
@@ -128,7 +127,6 @@ state_B:;
 
 state_C:;
 		State_C_Struct C_S;
-		goto state_C;
 
 
 
