@@ -9,8 +9,8 @@
 #define SERVER_ADDR     "127.0.0.1"     /* localhost */
 #define MAXBUF          1024
 
-int main()
-{   int sockfd;
+int main(){
+	int sockfd;
 	struct sockaddr_in dest;
 	char buffer[MAXBUF];
 
@@ -42,9 +42,80 @@ int main()
 	bzero(buffer, MAXBUF);
 	recv(sockfd, buffer, sizeof(buffer), 0);
 	printf("%s", buffer);
-	char* hello = "Hello";
-	send(sockfd, hello, 6,0);
+	send(sockfd, "takeoff", strlen("takeoff"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	usleep(1105);
+	send(sockfd, "up1", strlen("up1"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	usleep(1105);
+	send(sockfd, "down1", strlen("down1"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	usleep(1105);
+	send(sockfd, "up2", strlen("up2"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	usleep(1105);
+	send(sockfd, "down2", strlen("down2"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	usleep(1105);
+	send(sockfd, "s&l", strlen("s&l"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	usleep(1105);
+	send(sockfd, "flipleft", strlen("flipleft"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	usleep(1105);
+	send(sockfd, "clockwise", strlen("clockwise"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	usleep(1105);
+	send(sockfd, "counterclockwise", strlen("counterclockwise"),0);
 	/*---Clean up---*/
+/*
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	send(sockfd, "up1", strlen("up1"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	//	sleep(1);
+	send(sockfd, "down1", strlen("down1"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	//	sleep(1);
+	send(sockfd, "up2", strlen("up2"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	//	sleep(1);
+	send(sockfd, "down2", strlen("down2"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	//	sleep(1);
+	send(sockfd, "s&l", strlen("s&l"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	//	sleep(1);
+	send(sockfd, "s&l", strlen("flipleft"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	//	sleep(1);
+	send(sockfd, "clockwise", strlen("clockwise"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	//	sleep(1);
+	send(sockfd, "counterclockwise", strlen("counterclockwise"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	send(sockfd, "up1", strlen("up1"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	//	sleep(1);
+	send(sockfd, "down1", strlen("down1"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	//	sleep(1);
+	send(sockfd, "up2", strlen("up2"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	//	sleep(1);
+	send(sockfd, "down2", strlen("down2"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	//	sleep(1);
+	send(sockfd, "s&l", strlen("s&l"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	//	sleep(1);
+	send(sockfd, "s&l", strlen("flipleft"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	//	sleep(1);
+	send(sockfd, "clockwise", strlen("clockwise"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
+	//	sleep(1);
+	send(sockfd, "counterclockwise", strlen("counterclockwise"),0);
+*/
 	close(sockfd);
 	return 0;
 }
