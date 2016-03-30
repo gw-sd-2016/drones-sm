@@ -1,6 +1,6 @@
 #include <stdio.h>
 #start A 
-integer test = 0;
+volatile integer test = 0;
 volatile integer var1 = 99;
 nobackup integer var2 = 0;
 
@@ -28,7 +28,15 @@ State A{
 	for(x = 0; x <= 10; x++){
 		print("loop 2a x: %d\n",x);
 	}
-	
+	drone.left(99);
+	drone.right(99);
+	drone.up(99);
+	drone.down(99);
+	drone.forward(99);
+	drone.back(99);
+	drone.clockwise(99);
+	drone.counterClockwise(99);
+	drone.flipLeft(99);
 	transition C;
 }
 State B{

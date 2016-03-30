@@ -29,6 +29,17 @@ program {return PROGRAM ;}
 "transition" {eprintf("FOUND TRANSITION\n"); return TRANSITION;}
 "print"	{eprintf("print statement\n"); return PRINTF;}
 "GLOBAL"	{eprintf("Global variable found\n"); return GLOBALD;}
+"drone.left("{I}")"	{eprintf("Left command\n"); char* str1 = (yytext + 11);str1[strlen(str1)-1] = '\0';printf("%s\n",str1);yylval.string = (char*)strdup(str1);return DRONE_LEFT;}
+"drone.right("{I}")"	{eprintf("Right command\n"); char* str1 = (yytext + 12);str1[strlen(str1)-1] = '\0';printf("%s\n",str1);yylval.string = (char*)strdup(str1);return DRONE_RIGHT;}
+"drone.up("{I}")"	{eprintf("Up command\n");char* str1 = (yytext + 9);str1[strlen(str1)-1] = '\0';printf("%s\n",str1);yylval.string = (char*)strdup(str1); return DRONE_UP;}
+"drone.down("{I}")"	{eprintf("Down command\n"); char* str1 = (yytext + 11);str1[strlen(str1)-1] = '\0';printf("%s\n",str1);yylval.string = (char*)strdup(str1);return DRONE_DOWN;}
+"drone.forward("{I}")"	{eprintf("Forward command\n"); char* str1 = (yytext + 14);str1[strlen(str1)-1] = '\0';printf("%s\n",str1);yylval.string = (char*)strdup(str1);return DRONE_FORWARD;}
+"drone.back("{I}")"	{eprintf("Back command\n"); char* str1 = (yytext + 11);str1[strlen(str1)-1] = '\0';printf("%s\n",str1);yylval.string = (char*)strdup(str1);return DRONE_BACK;}
+"drone.clockwise("{I}")"	{eprintf("Clockwise command\n"); char* str1 = (yytext + 16);str1[strlen(str1)-1] = '\0';printf("%s\n",str1);yylval.string = (char*)strdup(str1);return DRONE_CLOCKWISE;}
+"drone.counterClockwise("{I}")"	{eprintf("Counter Clockwise command\n"); char* str1 = (yytext + 23);str1[strlen(str1)-1] = '\0';printf("%s\n",str1);yylval.string = (char*)strdup(str1);return DRONE_CCLOCKWISE;}
+"drone.flipLeft("{I}")"	{eprintf("Flip Left command\n"); char* str1 = (yytext + 15);str1[strlen(str1)-1] = '\0';printf("%s\n",str1);yylval.string = (char*)strdup(str1);return DRONE_FLIPLEFT;}
+"drone.stopAndLand("{I}")"	{eprintf("S&L command\n"); char* str1 = (yytext + 18);str1[strlen(str1)-1] = '\0';printf("%s\n",str1);yylval.string = (char*)strdup(str1);return DRONE_SANDL;}
+"drone.takeoff("{I}")"	{eprintf("S&L command\n"); char* str1 = (yytext + 13);str1[strlen(str1)-1] = '\0';printf("%s\n",str1);yylval.string = (char*)strdup(str1);return DRONE_TAKEOFF;}
 \".*\"	{yylval.string = (char*)strdup(yytext); return QUOTE;}
 \#"include"\".*\"|\#"include"\ \".*\"	{eprintf("OTHER FOUND\n"); yylval.string = (char*)strdup(yytext); return INCLUDE;}
 \#"include"\<.*\>|\#"include"\ \<.*\>	{yylval.string = (char*)strdup(yytext); return INCLUDE;}

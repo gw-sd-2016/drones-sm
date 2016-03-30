@@ -13,10 +13,10 @@ var server = net.createServer(function(socket) {
 			  .after(3000, function() {
 			  this.animate('flipLeft', 15);
 			  })5*/
-			if(String(data) === "up1"){
+			if(String(data) === "up"){
 			client.after(3000, function() {
 				client.up(.5);
-				console.log("Up1: .5");
+				console.log("Up: .5");
 				});
 			}
 			if(String(data) === "down1"){

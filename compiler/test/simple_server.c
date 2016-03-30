@@ -22,7 +22,7 @@ int main(int argc , char *argv[])
     //Prepare the sockaddr_in structure
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons( 8888 );
+    server.sin_port = htons(22000);
      
     //Bind
     if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
@@ -58,7 +58,7 @@ int main(int argc , char *argv[])
 		//write(client_sock , client_message , strlen(client_message));
 		memcpy(&GLOBAL_S, client_message, sizeof(State_GLOBAL_Struct));
 		//GLOBAL_S.send = 9;
-		printf("Simple hello: %d\n", GLOBAL_S.send);
+		printf("Simple hello: %d\n", client_message + 1);
 	}
      
     if(read_size == 0)

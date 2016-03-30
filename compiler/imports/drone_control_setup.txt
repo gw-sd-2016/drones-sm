@@ -1,0 +1,32 @@
+    int drone_sockfd;
+    struct sockaddr_in drone_dest;
+    char drone_buffer[MAXBUF];
+
+    /*---Open socket for streaming---*/
+    if ( (drone_sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0 )
+    {
+        perror("Socket");
+        exit(errno);
+    }
+
+    /*---Initialize server address/port struct---*/
+    bzero(&drone_dest, sizeof(drone_dest));
+    drone_dest.sin_family = AF_INET;
+    drone_dest.sin_port = htons(PORT_FTP);
+    if ( inet_aton(SERVER_ADDR, &drone_dest.sin_addr.s_addr) == 0 )
+    {
+        perror(SERVER_ADDR);
+        exit(errno);
+    }
+
+    /*---Connect to server---*/
+    if ( connect(drone_sockfd, (struct sockaddr*)&drone_dest, sizeof(drone_dest)) != 0 )
+    {
+        perror("Connect ");
+        exit(errno);
+    }
+
+    /*---Get "Hello?"---*/
+    bzero(drone_buffer, MAXBUF);
+	recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);
+    printf("%s", drone_buffer);

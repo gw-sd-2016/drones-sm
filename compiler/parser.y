@@ -33,6 +33,7 @@ static FILE* struct_file;
 %token <string> FUNC RELOP PRINTF QUOTE INCLUDE PPMM
 %token PROGRAM NOBACKUP VOLATILE INTEGER REAL VAR GLOBALD START_STATE
 %token BEGINT END STATE_DEC IF FOR THEN ELSE DO  
+%token DRONE_LEFT DRONE_RIGHT DRONE_TAKEOFF DRONE_SANDL DRONE_UP DRONE_DOWN DRONE_CCLOCKWISE DRONE_FLIPLEFT DRONE_CLOCKWISE DRONE_BACK DRONE_FORWARD
 %token ROPAR RCPAR ROBRK RCBRK DOT SEMICOLON COMMA COLON TRANSITION
 %token ASSIGNOP AND OR STRING BANG IF_EXPRESSION
 %token <integer> MULOP ADDOP
@@ -199,7 +200,7 @@ type: INTEGER {v_type = INTE; eprintf("its an INTEGER %d\n", v_type);}
 ;
 
 program: {
-	fprintf(mainfile, "#include <stdarg.h>\n#include <time.h>\n#include <stddef.h>\n#include <netinet/in.h>\n#include <inttypes.h>\n#include <unistd.h>\n#include <sys/socket.h>\n#include <sys/types.h>\n#include <stdlib.h>\n#include <netdb.h>\n#include <string.h>\n#include <pthread.h>\n#include \"structs.h\"\n");} 
+	fprintf(mainfile, "#include <stdarg.h>\n#include <time.h>\n#include <stddef.h>\n#include <netinet/in.h>\n#include <inttypes.h>\n#include <unistd.h>\n#include <sys/socket.h>\n#include <sys/types.h>\n#include <stdlib.h>\n#include <netdb.h>\n#include <string.h>\n#include <pthread.h>\n#include \"structs.h\"\n#include <errno.h>\n#define PORT_TIME 13\n#define PORT_FTP 1337\n#define SERVER_ADDR \"127.0.0.1\"\n#define MAXBUF 1024\n");} 
 	includes 
 	start_state {
 		fprintf(struct_file, "typedef struct __state_%s{int Curr_State;\n", scope);
@@ -209,11 +210,15 @@ program: {
 	G_declarations {
 		eprintf("GLOBAL Declarations End\n");
 		fprintf(embedded,"//%s\ndsflksdfs\n","\%d");
-		fprintf(cfile, "if( access(\"backup.txt\", F_OK) != -1 ) {\n    printf(\"file exists\\n\");\nprintf(\"BEFORE Value of first: %s\\n\", GLOBAL_S.test);\nprintf(\"BEFORE Value of first: %s\\n\", GLOBAL_S.var1);\nprintf(\"BEFORE Value of first: %s\\n\", GLOBAL_S.var2);\nfile_restore_global_values(&GLOBAL_S);\nprintf(\"AFTER Value of first: %s\\n\", GLOBAL_S.test);\nprintf(\"AFTER Value of first: %s\\n\", GLOBAL_S.var1);\nprintf(\"AFTER Value of first: %s\\n\", GLOBAL_S.var2);\n} else {\n    printf(\"file doesn't exist\\n\");\n}\n","\%d","\%d","\%d","\%d","\%d","\%d");
+		fprintf(cfile, "if( access(\"backup.txt\", F_OK) != -1 ) {\n    printf(\"file exists\\n\");\n//printf(\"BEFORE Value of first: %s\\n\", GLOBAL_S.test);\n//printf(\"BEFORE Value of first: %s\\n\", GLOBAL_S.var1);\n//printf(\"BEFORE Value of first: %s\\n\", GLOBAL_S.var2);\nfile_restore_global_values(&GLOBAL_S);\n//printf(\"AFTER Value of first: %s\\n\", GLOBAL_S.test);\n//printf(\"AFTER Value of first: %s\\n\", GLOBAL_S.var1);\n//printf(\"AFTER Value of first: %s\\n\", GLOBAL_S.var2);\n} else {\n    printf(\"file doesn't exist\\n\");\n}\n","\%d","\%d","\%d","\%d","\%d","\%d");
 		fprintf(cfile, "if(s){\nvoid* ptr = states[state];\ngoto *ptr;\n}\nelse{\ngoto *start_ptr;\n}\nbegin:;\n");
 		fprintf(struct_file,"\n} State_%s_Struct;\n\n", scope);
 	}
-	BEGINT {fprintf(mainfile, "void file_restore_global_values(State_GLOBAL_Struct *GLOBAL_S);\nvoid file_update_backup(int update_version, int position, int type, ...);\n\nint main(int argc, char* argv[]){\nint sockfd, n, o, s = 0, state = 0;\nchar *address = \"127.0.0.1\";\nwhile ((o = getopt (argc, argv, \"h:s:\")) != -1) {\nswitch(o){\ncase 'h':\naddress = optarg;\nbreak;\ncase 's':\ns = 1;\nstate = atoi(optarg);\nbreak;\n}\n}\nstruct sockaddr_in servaddr;\nsockfd=socket(AF_INET,SOCK_STREAM,0);\nbzero(&servaddr,sizeof servaddr);\nservaddr.sin_family=AF_INET;\nservaddr.sin_port=htons(22000);\ninet_pton(AF_INET, address, &(servaddr.sin_addr));\nconnect(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));\npthread_t thread;\nvoid* states[] = {");} 
+	BEGINT {fprintf(mainfile, "void file_restore_global_values(State_GLOBAL_Struct *GLOBAL_S);\nvoid file_update_backup(int update_version, int position, int type, ...);\n\nint main(int argc, char* argv[]){\n");
+			fclose(mainfile);
+			system("cat imports/drone_control_setup.txt >> mainfile.c");
+			mainfile = fopen("mainfile.c", "a+");
+			fprintf(mainfile,"int sockfd, n, o, s = 0, state = 0;\nchar *address = \"127.0.0.1\";\nwhile ((o = getopt (argc, argv, \"h:s:\")) != -1) {\nswitch(o){\ncase 'h':\naddress = optarg;\nbreak;\ncase 's':\ns = 1;\nstate = atoi(optarg);\nbreak;\n}\n}\nstruct sockaddr_in servaddr;\nsockfd=socket(AF_INET,SOCK_STREAM,0);\nbzero(&servaddr,sizeof servaddr);\nservaddr.sin_family=AF_INET;\nservaddr.sin_port=htons(22000);\ninet_pton(AF_INET, address, &(servaddr.sin_addr));\nconnect(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));\npthread_t thread;\nvoid* states[] = {");} 
 	states 
 	END {fprintf(mainfile, "};\n\n");eprintf("Parsed compound statements\n");}
 ;
@@ -259,11 +264,81 @@ statement: operations {eprintf("operations found %d\n",yylineno);}
 /*|FOR ROPAR FOR_EXPRESSION{fprintf(cfile,"for(%s){\n", $3);}
 RCPAR ROBRK optional_statements RCBRK {fprintf(cfile,"}\n");eprintf("FOR Statement done %d\n", yylineno);}*/
 |{
-if(update_all) fprintf(cfile,"\n%s_S.G_Struct = GLOBAL_S;\nGLOBAL_S.Curr_State = %d;\nmemcpy(data, &GLOBAL_S, sizeof(State_GLOBAL_Struct));\nwrite(sockfd, &GLOBAL_S, sizeof(State_GLOBAL_Struct));\n",scope,num_states);
+if(update_all) {
+		/*fprintf(cfile,"\n
+		%s_S.G_Struct = GLOBAL_S;\n
+		GLOBAL_S.Curr_State = %d;\n
+		memcpy(data, &GLOBAL_S, sizeof(State_GLOBAL_Struct));\n
+		write(sockfd, &GLOBAL_S, sizeof(State_GLOBAL_Struct));\n",scope,num_states);
+*/
+
+		fprintf(cfile,"\nGLOBAL_S.Curr_State = %d;\n",num_states);
+		fprintf(cfile, "send(sockfd, &GLOBAL_S, sizeof(State_GLOBAL_Struct), 0);\n");
+}
 num_states++;
 fprintf(mainfile,"&&state_%s,",scope);
+}transition_statement
+|DRONE_LEFT SEMICOLON{printf("DRONE LEFT\n");}
+|DRONE_RIGHT SEMICOLON{printf("DRONE RIGHT\n");} 
+|DRONE_BACK SEMICOLON{printf("DRONE BACK\n");}
+|DRONE_FORWARD SEMICOLON{printf("DRONE FORWARD\n");}
+|DRONE_CCLOCKWISE SEMICOLON{printf("DRONE CCLOCKWISE\n");}
+/*|DRONE_LEFT SEMICOLON{printf("DRONE LEFT\n"); 
+	fprintf(cfile, "send(drone_sockfd, \"takeoff\", strlen(\"takeoff\"),0);\n");
+    fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
+    fprintf(cfile, "usleep(1105);\n");
 }
-transition_statement
+|DRONE_RIGHT {printf("DRONE RIGHT\n") 
+	fprintf(cfile, "send(drone_sockfd, \"takeoff\", strlen(\"takeoff\"),0);\n");
+    fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
+    fprintf(cfile, "usleep(1105);\n");
+;}*/
+|DRONE_UP SEMICOLON{printf("DRONE UP\n"); 
+	fprintf(cfile, "send(drone_sockfd, \"up\", strlen(\"up\"),0);\n");
+    fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
+    fprintf(cfile, "usleep(1105);\n");
+}
+|DRONE_DOWN SEMICOLON{printf("DRONE DOWN\n");
+	fprintf(cfile, "send(drone_sockfd, \"down\", strlen(\"down\"),0);\n");
+    fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
+    fprintf(cfile, "usleep(1105);\n");
+}/*
+|DRONE_BACK SEMICOLON{printf("DRONE BACK\n") 
+	fprintf(cfile, "send(drone_sockfd, \"takeoff\", strlen(\"takeoff\"),0);\n");
+    fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
+    fprintf(cfile, "usleep(1105);\n");
+;}
+|DRONE_FORWARD SEMICOLON{printf("DRONE FORWARD\n") 
+	fprintf(cfile, "send(drone_sockfd, \"takeoff\", strlen(\"takeoff\"),0);\n");
+    fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
+    fprintf(cfile, "usleep(1105);\n");
+;}*/
+|DRONE_CLOCKWISE SEMICOLON{printf("DRONE CLOCKWISE\n"); 
+	fprintf(cfile, "send(drone_sockfd, \"clockwise\", strlen(\"clockwise\"),0);\n");
+    fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
+    fprintf(cfile, "usleep(1105);\n");
+}/*
+|DRONE_CCLOCKWISE SEMICOLON{printf("DRONE CCLOCKWISE\n") 
+	fprintf(cfile, "send(drone_sockfd, \"takeoff\", strlen(\"takeoff\"),0);\n");
+    fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
+    fprintf(cfile, "usleep(1105);\n");
+;}*/
+|DRONE_FLIPLEFT SEMICOLON{printf("DRONE FLIPLEFT\n");
+	fprintf(cfile, "send(drone_sockfd, \"flipleft\", strlen(\"flipleft\"),0);\n");
+    fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
+    fprintf(cfile, "usleep(1105);\n");
+}
+|DRONE_SANDL SEMICOLON{printf("DRONE SANDL\n");
+	fprintf(cfile, "send(drone_sockfd, \"s&l\", strlen(\"s&l\"),0);\n");
+    fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
+    fprintf(cfile, "usleep(1105);\n");
+}
+|DRONE_TAKEOFF SEMICOLON{printf("DRONE TAKEOFF\n");
+	fprintf(cfile, "send(drone_sockfd, \"takeoff\", strlen(\"takeoff\"),0);\n");
+    fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
+    fprintf(cfile, "usleep(1105);\n");
+}
+
 |FOR ROPAR ID ASSIGNOP {fprintf(cfile,"for(%s_S.%s = ", scope, $3);}item SEMICOLON ID RELOP {fprintf(cfile,"; %s_S.%s %s ", scope, $8, $9);} item SEMICOLON ID PPMM {fprintf(cfile,"; %s_S.%s%s){\n",scope,$13,$14);}
 RCPAR ROBRK optional_statements RCBRK {fprintf(cfile,"}\n");eprintf("FOR Statement done %d\n", yylineno);}
 |IF ROPAR {fprintf(cfile,"if(");}comparison_list RCPAR ROBRK {fprintf(cfile, "){\n");} 
@@ -327,7 +402,9 @@ operations: ID
 					}
 					fprintf(cfile, "memset(data_%s, %d, 1);\n",$1,posi);
 					fprintf(cfile, "memcpy(&data_%s[1], &GLOBAL_S.%s, sizeof(int));\n",$1,$1);
-					fprintf(cfile, "write(sockfd, &data_%s, (sizeof(GLOBAL_S.%s) + sizeof(int)));\n",$1,$1);
+					fprintf(cfile, "send(sockfd, &data_%s, sizeof(data_%s), 0);\n",$1,$1);
+					//fprintf(cfile, "write(sockfd, &data_%s, (sizeof(GLOBAL_S.%s) + sizeof(int)));\n",$1,$1);
+					ffprintf(cfile, "file_update_backup(9, %d, %d, GLOBAL_S.%s);\n", posi, get_type($1), $1);
 				}
 				eprintf("ID ASSIGNOP math post\n");
 				
@@ -354,7 +431,8 @@ operations: ID
 					}
 					fprintf(cfile, "memset(data_%s, %d, 1);\n",$2,posi);
 					fprintf(cfile, "memcpy(&data_%s[1], &GLOBAL_S.%s, sizeof(int));\n",$2,$2);
-					fprintf(cfile, "write(sockfd, &data_%s, (sizeof(GLOBAL_S.%s) + sizeof(int)));\n",$2,$2);
+					fprintf(cfile, "send(sockfd, &data_%s, sizeof(data_%s), 0);\n",$2,$2);
+					//fprintf(cfile, "write(sockfd, &data_%s, (sizeof(GLOBAL_S.%s) + sizeof(int)));\n",$2,$2);
 					ffprintf(cfile, "file_update_backup(9, %d, %d, GLOBAL_S.%s);\n", posi, get_type($2), $2);
 				}
 				eprintf("ID ASSIGNOP math post\n");
