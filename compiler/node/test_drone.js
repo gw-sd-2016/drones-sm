@@ -13,28 +13,47 @@ var server = net.createServer(function(socket) {
 			  .after(3000, function() {
 			  this.animate('flipLeft', 15);
 			  })5*/
+			if(String(data) === "stop"){
+			client.after(3000, function() {
+				client.stop();
+				console.log("Stop");
+				});
+			}
 			if(String(data) === "up"){
 			client.after(3000, function() {
 				client.up(.5);
 				console.log("Up: .5");
 				});
 			}
-			if(String(data) === "down1"){
-			client.after(3000, function() {
-				client.down(.5);
-				console.log("Down1: .5");
-				});
-			}
-			if(String(data) === "up2"){
-				client.after(3000, function() {
-						client.up(.5);
-						console.log("Up2: .5");
-						});
-			}
-			if(String(data) === "down2"){
+			if(String(data) === "down"){
 				client.after(3000, function() {
 						client.down(.5);
-						console.log("Down2: .5");
+						console.log("Down: .5");
+						});
+			}
+
+			if(String(data) === "left"){
+				client.after(3000, function() {
+						client.left(.5);
+						console.log("Left: .5");
+						});
+			}
+			if(String(data) === "right"){
+				client.after(3000, function() {
+						client.right(.5);
+						console.log("Right: .5");
+						});
+			}
+			if(String(data) === "forward"){
+				client.after(3000, function() {
+						client.front(.5);
+						console.log("forward: .5");
+						});
+			}
+			if(String(data) === "back"){
+				client.after(3000, function() {
+						client.back(.5);
+						console.log("back: .5");
 						});
 			}
 			if(String(data) === "s&l"){

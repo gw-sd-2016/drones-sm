@@ -17,7 +17,16 @@
 #endif
  */
 
+/*typedef struct global_list{
+	struct global_list* head;
+	struct global_list* tail;
+} gl_list;
 
+typedef struct global_var{
+	struct global_var* next;
+	char* id;
+} g_var;
+*/
 typedef enum var_types{
 	INTE,
 	REL,
@@ -182,7 +191,7 @@ int get_volatile(char* id){
 		while(temp->next != NULL){
 			dprintf("Current Declaration ID is: %s\nLooking for ID %s\n", temp->id, id);
 			if(!strcmp(temp->id, id)){
-				dprintf("ID (%s) has been found - Position %d\n", id, temp->position);
+				dprintf("First Vol ID (%s) has been found - Position %d\n", id, temp->position);
 				//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
 				return temp->vol;
 			}
@@ -190,7 +199,7 @@ int get_volatile(char* id){
 			temp = temp->next;
 		}
 		if(!strcmp(temp->id, id) && !strcmp(temp->scope, "GLOBAL")){
-			dprintf("ID (%s) has been found - Position %d\n", id, temp->position);
+			dprintf("Second Vol ID (%s) has been found - Position %d\n", id, temp->position);
 			//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
 			return temp->vol;
 		}
@@ -210,7 +219,7 @@ int get_position(char* id){
 		while(temp->next != NULL){
 			dprintf("Current Declaration ID is: %s\nLooking for ID %s\n", temp->id, id);
 			if(!strcmp(temp->id, id)){
-				dprintf("ID (%s) has been found - Position %d\n", id, temp->position);
+				dprintf("First Pos ID (%s) has been found - Position %d\n", id, temp->position);
 				//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
 				return temp->position;
 			}
@@ -218,7 +227,7 @@ int get_position(char* id){
 			temp = temp->next;
 		}
 		if(!strcmp(temp->id, id) && !strcmp(temp->scope, "GLOBAL")){
-			dprintf("ID (%s) has been found - Position %d\n", id, temp->position);
+			dprintf("Second Pos ID (%s) has been found - Position %d\n", id, temp->position);
 			//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
 			return temp->position;
 		}
@@ -238,7 +247,7 @@ int get_type(char* id){
 		while(temp->next != NULL){
 			dprintf("Current Declaration ID is: %s\nLooking for ID %s\n", temp->id, id);
 			if(!strcmp(temp->id, id)){
-				dprintf("ID (%s) has been found - Position %d\n", id, temp->position);
+				dprintf("First Type ID (%s) has been found - Position %d\n", id, temp->position);
 				//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
 				return temp->type;
 			}
@@ -246,7 +255,7 @@ int get_type(char* id){
 			temp = temp->next;
 		}
 		if(!strcmp(temp->id, id) && !strcmp(temp->scope, "GLOBAL")){
-			dprintf("ID (%s) has been found - Position %d\n", id, temp->position);
+			dprintf("Second Type ID (%s) has been found - Position %d\n", id, temp->position);
 			//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
 			return temp->type;
 		}
@@ -265,7 +274,7 @@ int get_backup(char* id){
 		while(temp->next != NULL){
 			dprintf("Current Declaration ID is: %s\nLooking for ID %s\n", temp->id, id);
 			if(!strcmp(temp->id, id)){
-				dprintf("ID (%s) has been found - Position %d\n", id, temp->position);
+				dprintf("First Back ID (%s) has been found - Position %d\n", id, temp->position);
 				//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
 				if(temp->backup == -1) return -1;
 				return temp->backup++;
@@ -274,11 +283,40 @@ int get_backup(char* id){
 			temp = temp->next;
 		}
 		if(!strcmp(temp->id, id) && !strcmp(temp->scope, "GLOBAL")){
-			dprintf("ID (%s) has been found - Position %d\n", id, temp->position);
+			dprintf("Second Back ID (%s) has been found - Position %d\n", id, temp->position);
 			//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
 			if(temp->backup == -1) return -1;
 			return temp->backup++;
 		}
 		return 1;
+	}
+}
+
+char* get_scope(char* id){
+	int string_val;
+	string_val = string_to_int(id);
+	if(declared_variables[string_val] == NULL){
+		dprintf("FAILED - There is no current declaration that has the same hash BUCKET-%d\n\n", string_val);
+		return NULL;
+	}else{
+		var* temp = declared_variables[string_val];
+		while(temp->next != NULL){
+			dprintf("Current Declaration ID is: %s\nLooking for ID %s\n", temp->id, id);
+			if(!strcmp(temp->id, id)){
+				dprintf("First Scope ID (%s) has been found - Position %d - Scope %s\n", id, temp->position, temp->scope);
+				char* scp = temp->scope;
+				dprintf("Scope: %s - temp->scope %s\n", scp, temp->scope);
+				//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
+				return scp;
+			}
+			dprintf("\nThis was not a conflict\n");
+			temp = temp->next;
+		}
+		if(!strcmp(temp->id, id) && !strcmp(temp->scope, "GLOBAL")){
+			dprintf("Second Scope ID (%s) has been found - Position %d - Scope %s\n", id, temp->position, temp->scope);
+			//system("rm mainfile.c cfile"); this is dumb, but I intend on having some kind of cleanup when something fails at compelation time, otherwise it can create issues
+			return temp->scope;
+		}
+		return NULL;
 	}
 }

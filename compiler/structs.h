@@ -13,7 +13,7 @@ double w;
 } State_A_Struct;
 
 typedef struct __state_B{State_GLOBAL_Struct G_Struct;
-int q, x;
+int q, p;
 
 } State_B_Struct;
 

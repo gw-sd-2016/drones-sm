@@ -74,7 +74,7 @@ servaddr.sin_port=htons(22000);
 inet_pton(AF_INET, address, &(servaddr.sin_addr));
 connect(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));
 pthread_t thread;
-void* states[] = {&&state_A,&&state_A,&&state_B,&&state_C,};
+void* states[] = {&&state_A,&&state_A,&&state_B,};
 
 void* start_ptr = &&state_A;
 State_GLOBAL_Struct GLOBAL_S;
@@ -104,6 +104,8 @@ goto *start_ptr;
 begin:;
 state_A:;
 State_A_Struct A_S;
+
+GLOBAL_S.Curr_State = 0;
 A_S.x = 9;
 A_S.i;
 A_S.y;
@@ -115,69 +117,113 @@ char* data_var1 = malloc(sizeof(GLOBAL_S.var1) + sizeof(int));
 memset(data_var1, 2, 1);
 memcpy(&data_var1[1], &GLOBAL_S.var1, sizeof(int));
 send(sockfd, &data_var1, sizeof(data_var1), 0);
+file_update_backup(9, 2, 0, GLOBAL_S.var1);
 GLOBAL_S.test = 1;
 char* data_test = malloc(sizeof(GLOBAL_S.test) + sizeof(int));
 memset(data_test, 1, 1);
 memcpy(&data_test[1], &GLOBAL_S.test, sizeof(int));
 send(sockfd, &data_test, sizeof(data_test), 0);
+file_update_backup(9, 1, 0, GLOBAL_S.test);
 GLOBAL_S.var1 = 9;
 memset(data_var1, 2, 1);
 memcpy(&data_var1[1], &GLOBAL_S.var1, sizeof(int));
 send(sockfd, &data_var1, sizeof(data_var1), 0);
+file_update_backup(9, 2, 0, GLOBAL_S.var1);
 GLOBAL_S.var2 = 9;
 printf("x: %d\n",A_S.x);
 GLOBAL_S.test = 1;
 memset(data_test, 1, 1);
 memcpy(&data_test[1], &GLOBAL_S.test, sizeof(int));
 send(sockfd, &data_test, sizeof(data_test), 0);
+file_update_backup(9, 1, 0, GLOBAL_S.test);
 for(A_S.i = 0; A_S.i <= 10; A_S.i++){
 printf("loop 1a x: %d i: %d\n",A_S.x, A_S.i);
 }
 if(A_S.x <= 9){
-
-GLOBAL_S.Curr_State = 0;
 send(sockfd, &GLOBAL_S, sizeof(State_GLOBAL_Struct), 0);
+usleep(1105);
 goto state_C;
 printf("if 1a x: %d\n",A_S.x);
 }
 for(A_S.x = 0; A_S.x <= 10; A_S.x++){
 printf("loop 2a x: %d\n",A_S.x);
 }
+send(drone_sockfd, "left", strlen("left"),0);
+recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);
+send(drone_sockfd, "stop", strlen("stop"),0);
+recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);
+usleep(1105);
+send(drone_sockfd, "right", strlen("right"),0);
+recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);
+send(drone_sockfd, "stop", strlen("stop"),0);
+recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);
+usleep(1105);
 send(drone_sockfd, "up", strlen("up"),0);
+recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);
+send(drone_sockfd, "stop", strlen("stop"),0);
 recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);
 usleep(1105);
 send(drone_sockfd, "down", strlen("down"),0);
 recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);
+send(drone_sockfd, "stop", strlen("stop"),0);
+recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);
+usleep(1105);
+send(drone_sockfd, "forward", strlen("forward"),0);
+recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);
+send(drone_sockfd, "stop", strlen("stop"),0);
+recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);
+usleep(1105);
+send(drone_sockfd, "back", strlen("back"),0);
+recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);
+send(drone_sockfd, "stop", strlen("stop"),0);
+recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);
 usleep(1105);
 send(drone_sockfd, "clockwise", strlen("clockwise"),0);
+recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);
+send(drone_sockfd, "stop", strlen("stop"),0);
+recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);
+usleep(1105);
+send(drone_sockfd, "takeoff", strlen("takeoff"),0);
+recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);
+send(drone_sockfd, "stop", strlen("stop"),0);
 recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);
 usleep(1105);
 send(drone_sockfd, "flipleft", strlen("flipleft"),0);
 recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);
+send(drone_sockfd, "stop", strlen("stop"),0);
+recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);
 usleep(1105);
-
-GLOBAL_S.Curr_State = 1;
+GLOBAL_S.test = 9;
+memset(data_test, 1, 1);
+memcpy(&data_test[1], &GLOBAL_S.test, sizeof(int));
+send(sockfd, &data_test, sizeof(data_test), 0);
+file_update_backup(9, 1, 0, GLOBAL_S.test);
+A_S.x = A_S.x + 1;
 send(sockfd, &GLOBAL_S, sizeof(State_GLOBAL_Struct), 0);
-goto state_C;
+usleep(1105);
+goto state_B;
 
 
 state_B:;
 State_B_Struct B_S;
+
+GLOBAL_S.Curr_State = 2;
 B_S.q;
-B_S.x = 0;
+B_S.p = 0;
 B_S.q = 9;
 if(B_S.q <= 9){
 printf("if 1b q: %d\n",B_S.q);
 }
-for(B_S.x = 2; B_S.x <= B_S.q; B_S.x++){
-printf("loop 1b x: %d q: %d\n",B_S.x, B_S.q);
+for(B_S.p = 2; B_S.p <= B_S.q; B_S.p++){
+printf("loop 1b p: %d q: %d\n",B_S.p, B_S.q);
 }
-goto state_A;
+goto state_C;
 
 
 state_C:;
 State_C_Struct C_S;
-goto state_C;
+
+GLOBAL_S.Curr_State = 3;
 
 
 
@@ -197,4 +243,36 @@ memcpy(&GLOBAL_S->Curr_State + pos, &value, sizeof(int));
 }
 pos++;
 }
+}
+void file_update_backup(int update_versioni, int position, int type, ...){
+FILE* original = fopen("backup.txt", "r");
+FILE* temp = fopen("backup_temp.txt", "w");
+char * value_char = NULL;
+int pos = 0;
+va_list list;
+va_start(list, type);
+size_t len = 0;
+
+while ((getline(&value_char, &len, original)) != -1) {
+if(pos != position){
+fprintf(temp, "%s", value_char);
+}else {
+if(type == 0){
+fprintf(temp, "%d\n", va_arg(list, int));
+//printf("arg int\n");
+}else if(type == 1){
+fprintf(temp, "%f\n", va_arg(list, double));
+//printf("arg double\n");
+//fprintf(temp, "%s\n", value_char);
+}else if(type == 2){
+fprintf(temp, "%s\n", va_arg(list, char*));
+//printf("arg char*\n");
+}
+}
+pos++;
+}
+va_end(list);
+fclose(original);
+fclose(temp);
+system("cat backup_temp.txt > backup.txt;rm backup_temp.txt");
 }

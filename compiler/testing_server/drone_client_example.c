@@ -2,13 +2,13 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/socket.h>
-#include <resolv.h>
 
 #define PORT_TIME       13              /* "time" (not available on RedHat) */
 #define PORT_FTP        1337              /* FTP connection port */
 #define SERVER_ADDR     "127.0.0.1"     /* localhost */
 #define MAXBUF          1024
 
+#include <resolv.h>
 int main(){
 	int sockfd;
 	struct sockaddr_in dest;
@@ -45,23 +45,19 @@ int main(){
 	send(sockfd, "takeoff", strlen("takeoff"),0);
 	recv(sockfd, buffer, sizeof(buffer), 0);
 	usleep(1105);
-	send(sockfd, "left", strlen("left"),0);
+	send(sockfd, "up1", strlen("up1"),0);
 	recv(sockfd, buffer, sizeof(buffer), 0);
 	usleep(1105);
-	send(sockfd, "right", strlen("right"),0);
+	send(sockfd, "down1", strlen("down1"),0);
 	recv(sockfd, buffer, sizeof(buffer), 0);
 	usleep(1105);
-	send(sockfd, "up", strlen("up"),0);
+	send(sockfd, "up2", strlen("up2"),0);
 	recv(sockfd, buffer, sizeof(buffer), 0);
 	usleep(1105);
-	send(sockfd, "down", strlen("down"),0);
+	send(sockfd, "down2", strlen("down2"),0);
 	recv(sockfd, buffer, sizeof(buffer), 0);
 	usleep(1105);
-	/*
-	send(sockfd, "forward", strlen("forward"),0);
-	recv(sockfd, buffer, sizeof(buffer), 0);
-	usleep(1105);
-	send(sockfd, "back", strlen("back"),0);
+	send(sockfd, "s&l", strlen("s&l"),0);
 	recv(sockfd, buffer, sizeof(buffer), 0);
 	usleep(1105);
 	send(sockfd, "flipleft", strlen("flipleft"),0);
@@ -71,14 +67,11 @@ int main(){
 	recv(sockfd, buffer, sizeof(buffer), 0);
 	usleep(1105);
 	send(sockfd, "counterclockwise", strlen("counterclockwise"),0);
-	send(sockfd, "s&l", strlen("s&l"),0);
+	/*---Clean up---*/
+/*
 	recv(sockfd, buffer, sizeof(buffer), 0);
-	usleep(1105);*/
-/*---Clean up---*/
-	/*
-	   recv(sockfd, buffer, sizeof(buffer), 0);
-	   send(sockfd, "up1", strlen("up1"),0);
-	   recv(sockfd, buffer, sizeof(buffer), 0);
+	send(sockfd, "up1", strlen("up1"),0);
+	recv(sockfd, buffer, sizeof(buffer), 0);
 	//	sleep(1);
 	send(sockfd, "down1", strlen("down1"),0);
 	recv(sockfd, buffer, sizeof(buffer), 0);
@@ -122,7 +115,7 @@ int main(){
 	recv(sockfd, buffer, sizeof(buffer), 0);
 	//	sleep(1);
 	send(sockfd, "counterclockwise", strlen("counterclockwise"),0);
-	 */
+*/
 	close(sockfd);
 	return 0;
 }

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "drone"
 #start A 
 volatile integer test = 0;
 volatile integer var1 = 99;
@@ -18,7 +19,7 @@ State A{
 	print("x: %d\n", x);
 	test = 1;
 	for(i = 0; i <= 10; i++){
-		print("loop 1a x: %d i: %d\n", x, i);	
+		print("loop 1a x: %d i: %d\n", x, i);
 	}
 
 	if(x <= 9){
@@ -37,24 +38,25 @@ State A{
 	drone.clockwise(99);
 	drone.counterClockwise(99);
 	drone.flipLeft(99);
-	transition C;
+	test = 9;
+	x = x + 1;
+	transition B;
 }
 State B{
-	integer q, x = 0;
+	integer q, p = 0;
 	q = 9;
 	if(q <= 9){
 		print("if 1b q: %d\n",q);
 	}
 	
-	for(x = 2; x <= q; x++){
-		print("loop 1b x: %d q: %d\n", x, q);
+	for(p = 2; p <= q; p++){
+		print("loop 1b p: %d q: %d\n", p, q);
 	}
 		
-	transition A;
+	transition C;
 }
 
 State C{
 
-	transition C;
 }
 #EndStates

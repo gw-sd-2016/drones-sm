@@ -5,6 +5,8 @@
 
 D [a-zA-Z]+[a-zA-Z0-9\_\.\-\>]*
 I -?[0-9]+
+R -?[0-9]+"."[0-9]+
+UR [0-9]*\.[0-9]+
 %option yylineno
 %%
 program {return PROGRAM ;}
@@ -17,11 +19,13 @@ program {return PROGRAM ;}
 ","	{return COMMA;}
 "var"	{return VAR;}
 ":"	{return COLON;}
+"sleep("{UR}")"|"usleep("{UR}")"|"usleep("{I}")"	{yylval.string = (char*)strdup(yytext); return SLEEP;}
 "volatile"	{return VOLATILE;}
 "nobackup"	{return NOBACKUP;}
 "string"	{return STRING;}
 "integer"	{return INTEGER;}
 "#start "	{return START_STATE;}
+"#include \"drone\""	{return INC_DRONE;}
 "real"	{return REAL;}
 "#States"	{return BEGINT;}
 "#EndStates"	{return END;}

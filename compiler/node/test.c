@@ -115,21 +115,21 @@ state_A:;
 		goto state_Recv;
 
 state_B:;
-		send(sockf, "up1", strlen("up1"),0);
+		send(sockf, "up", strlen("up"),0);
 		GLOBAL_S.Curr_State += 1;
 		usleep(1105);
 		printf("Next State: %d\n", GLOBAL_S.Curr_State);
 		goto state_Recv;
 
 state_C:;
-		send(sockf, "down1", strlen("down1"),0);
+		send(sockf, "down", strlen("down"),0);
 		GLOBAL_S.Curr_State += 1;
 		usleep(1105);
 		printf("Next State: %d\n", GLOBAL_S.Curr_State);
 		goto state_Recv;
 
 state_D:;
-		send(sockf, "up2", strlen("up2"),0);
+		send(sockf, "up", strlen("up"),0);
 		GLOBAL_S.Curr_State += 1;
 		usleep(1105);
 		printf("Next State: %d\n", GLOBAL_S.Curr_State);

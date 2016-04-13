@@ -12,6 +12,21 @@ int volatil = 0;
 int backup_created = 0; // to determine if the char array has been created yet
 int temp_backup = 0; //for error checking purposes
 int update_all = 0;
+int inc_drone = 0;
+int num_global_elements = 0;
+
+typedef struct global_var{
+    struct global_var* next;
+    char* id;
+} g_var;
+
+typedef struct global_list{
+    struct global_var* head;
+    struct global_var* tail;
+} gl_list;
+
+gl_list* g_list;
+
 extern int yylineno;
 static FILE* cfile;
 static FILE* mainfile;
@@ -29,9 +44,9 @@ static FILE* struct_file;
 %token <integer> INT // union structure for storing integer
 %token <real> REALNO // union structure for storing real number
 %token <string> ID   // union structure for storing identifier's name
-%token <string> FOR_EXPRESSION INSERT_C
+%token <string> FOR_EXPRESSION INSERT_C SLEEP
 %token <string> FUNC RELOP PRINTF QUOTE INCLUDE PPMM
-%token PROGRAM NOBACKUP VOLATILE INTEGER REAL VAR GLOBALD START_STATE
+%token PROGRAM NOBACKUP VOLATILE INTEGER REAL VAR GLOBALD START_STATE INC_DRONE
 %token BEGINT END STATE_DEC IF FOR THEN ELSE DO  
 %token DRONE_LEFT DRONE_RIGHT DRONE_TAKEOFF DRONE_SANDL DRONE_UP DRONE_DOWN DRONE_CCLOCKWISE DRONE_FLIPLEFT DRONE_CLOCKWISE DRONE_BACK DRONE_FORWARD
 %token ROPAR RCPAR ROBRK RCBRK DOT SEMICOLON COMMA COLON TRANSITION
@@ -48,7 +63,32 @@ G_vars_decl: G_var_decl
 |G_vars_decl COMMA {fprintf(struct_file,", ");/*TODO*/fprintf(cfile, ";\n");} G_var_decl
 ;
 
-G_var_decl: ID {create_var($1, v_type, NOSTYPE, scope, volatil, backup_created); print_list(); fprintf(struct_file, "%s", $1); printf("-----------\nPos of %s: %d\n-----------\n",$1, get_position($1));/*TODO*/fprintf(cfile, "%s_S.%s", scope, $1);} assign_var
+G_var_decl: ID {
+	create_var($1, v_type, NOSTYPE, scope, volatil, backup_created); print_list();
+	fprintf(struct_file, "%s", $1);
+	num_global_elements = num_global_elements + 1;
+	printf("NUM GLOBAL ELEMENTS %d\n", num_global_elements);
+	printf("-----------\nPos of %s: %d\n-----------\n",$1, get_position($1));
+	/*TODO*/fprintf(cfile, "%s_S.%s", scope, $1);
+	printf("GLOBAL DEC\n");
+	g_var* temp = malloc(sizeof(g_var));
+	temp->id = $1;
+	if(g_list->head == NULL){
+		printf("Head is NULL\n");
+		g_list->head = temp;
+	}
+	g_list->tail = temp;
+	temp->next = g_list->tail;
+	printf("GLOBAL DEC 2 head %s\n",g_list->head->id);
+	printf("GLOBAL DEC 2 tail %s\n",g_list->tail->id);
+	
+	/*int i = 0;
+	g_var* temp2 = g_list->head;
+	while(temp2 != NULL){
+		printf("Var: %s - i: %d - num_global_elements: %d\n", temp2->id, i, num_global_elements);
+		temp2 = temp2->next;
+	}*/
+	} assign_var
 |
 ;
 
@@ -201,7 +241,8 @@ type: INTEGER {v_type = INTE; eprintf("its an INTEGER %d\n", v_type);}
 
 program: {
 	fprintf(mainfile, "#include <stdarg.h>\n#include <time.h>\n#include <stddef.h>\n#include <netinet/in.h>\n#include <inttypes.h>\n#include <unistd.h>\n#include <sys/socket.h>\n#include <sys/types.h>\n#include <stdlib.h>\n#include <netdb.h>\n#include <string.h>\n#include <pthread.h>\n#include \"structs.h\"\n#include <errno.h>\n#define PORT_TIME 13\n#define PORT_FTP 1337\n#define SERVER_ADDR \"127.0.0.1\"\n#define MAXBUF 1024\n");} 
-	includes 
+	includes
+	inc_drone 
 	start_state {
 		fprintf(struct_file, "typedef struct __state_%s{int Curr_State;\n", scope);
 		fprintf(cfile, "State_%s_Struct %s_S;\nunsigned char* data = malloc(sizeof(GLOBAL_S));\n", scope, scope);
@@ -216,11 +257,15 @@ program: {
 	}
 	BEGINT {fprintf(mainfile, "void file_restore_global_values(State_GLOBAL_Struct *GLOBAL_S);\nvoid file_update_backup(int update_version, int position, int type, ...);\n\nint main(int argc, char* argv[]){\n");
 			fclose(mainfile);
-			system("cat imports/drone_control_setup.txt >> mainfile.c");
+			if(inc_drone) system("cat imports/drone_control_setup.txt >> mainfile.c");
 			mainfile = fopen("mainfile.c", "a+");
 			fprintf(mainfile,"int sockfd, n, o, s = 0, state = 0;\nchar *address = \"127.0.0.1\";\nwhile ((o = getopt (argc, argv, \"h:s:\")) != -1) {\nswitch(o){\ncase 'h':\naddress = optarg;\nbreak;\ncase 's':\ns = 1;\nstate = atoi(optarg);\nbreak;\n}\n}\nstruct sockaddr_in servaddr;\nsockfd=socket(AF_INET,SOCK_STREAM,0);\nbzero(&servaddr,sizeof servaddr);\nservaddr.sin_family=AF_INET;\nservaddr.sin_port=htons(22000);\ninet_pton(AF_INET, address, &(servaddr.sin_addr));\nconnect(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));\npthread_t thread;\nvoid* states[] = {");} 
 	states 
 	END {fprintf(mainfile, "};\n\n");eprintf("Parsed compound statements\n");}
+;
+
+inc_drone: INC_DRONE {inc_drone = 1;}
+|
 ;
 
 start_state: START_STATE ID {fprintf(cfile, "void* start_ptr = &&state_%s;\n", $2);}
@@ -237,7 +282,7 @@ states: state {eprintf("Single State detected\n");}
 |states state {eprintf("Multiple States Detected\n");}
 ;
 
-state: STATE_DEC ID{scope = $2; fprintf(struct_file, "typedef struct __state_%s{State_GLOBAL_Struct G_Struct;\n", $2);fprintf(cfile, "state_%s:;\nState_%s_Struct %s_S;\n",$2,$2, $2);}
+state: STATE_DEC ID{scope = $2; fprintf(struct_file, "typedef struct __state_%s{State_GLOBAL_Struct G_Struct;\n", $2);fprintf(cfile, "state_%s:;\nState_%s_Struct %s_S;\n",$2,$2, $2);fprintf(cfile,"\nGLOBAL_S.Curr_State = %d;\n",num_states);}
 		ROBRK 
 		declarations{fprintf(struct_file,"\n} State_%s_Struct;\n\n",$2);}
 		optional_statements{/*
@@ -272,61 +317,76 @@ if(update_all) {
 		write(sockfd, &GLOBAL_S, sizeof(State_GLOBAL_Struct));\n",scope,num_states);
 */
 
-		fprintf(cfile,"\nGLOBAL_S.Curr_State = %d;\n",num_states);
-		fprintf(cfile, "send(sockfd, &GLOBAL_S, sizeof(State_GLOBAL_Struct), 0);\n");
+		fprintf(cfile, "send(sockfd, &GLOBAL_S, sizeof(State_GLOBAL_Struct), 0);\nusleep(1105);\n");
 }
 num_states++;
 fprintf(mainfile,"&&state_%s,",scope);
 }transition_statement
-|DRONE_LEFT SEMICOLON{printf("DRONE LEFT\n");}
-|DRONE_RIGHT SEMICOLON{printf("DRONE RIGHT\n");} 
-|DRONE_BACK SEMICOLON{printf("DRONE BACK\n");}
-|DRONE_FORWARD SEMICOLON{printf("DRONE FORWARD\n");}
-|DRONE_CCLOCKWISE SEMICOLON{printf("DRONE CCLOCKWISE\n");}
-/*|DRONE_LEFT SEMICOLON{printf("DRONE LEFT\n"); 
-	fprintf(cfile, "send(drone_sockfd, \"takeoff\", strlen(\"takeoff\"),0);\n");
+|DRONE_LEFT SEMICOLON{printf("DRONE LEFT\n"); 
+	fprintf(cfile, "send(drone_sockfd, \"left\", strlen(\"left\"),0);\n");
     fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
-    fprintf(cfile, "usleep(1105);\n");
+    fprintf(cfile, "send(drone_sockfd, \"stop\", strlen(\"stop\"),0);\n");
+    fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
+	fprintf(cfile, "usleep(1105);\n");
 }
-|DRONE_RIGHT {printf("DRONE RIGHT\n") 
-	fprintf(cfile, "send(drone_sockfd, \"takeoff\", strlen(\"takeoff\"),0);\n");
+
+|DRONE_RIGHT {printf("DRONE RIGHT\n"); 
+	fprintf(cfile, "send(drone_sockfd, \"right\", strlen(\"right\"),0);\n");
     fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
-    fprintf(cfile, "usleep(1105);\n");
-;}*/
+    fprintf(cfile, "send(drone_sockfd, \"stop\", strlen(\"stop\"),0);\n");
+    fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
+	fprintf(cfile, "usleep(1105);\n");
+}
+
 |DRONE_UP SEMICOLON{printf("DRONE UP\n"); 
 	fprintf(cfile, "send(drone_sockfd, \"up\", strlen(\"up\"),0);\n");
     fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
-    fprintf(cfile, "usleep(1105);\n");
+    fprintf(cfile, "send(drone_sockfd, \"stop\", strlen(\"stop\"),0);\n");
+    fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
+	fprintf(cfile, "usleep(1105);\n");
 }
+
 |DRONE_DOWN SEMICOLON{printf("DRONE DOWN\n");
 	fprintf(cfile, "send(drone_sockfd, \"down\", strlen(\"down\"),0);\n");
     fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
-    fprintf(cfile, "usleep(1105);\n");
-}/*
-|DRONE_BACK SEMICOLON{printf("DRONE BACK\n") 
-	fprintf(cfile, "send(drone_sockfd, \"takeoff\", strlen(\"takeoff\"),0);\n");
+    fprintf(cfile, "send(drone_sockfd, \"stop\", strlen(\"stop\"),0);\n");
     fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
-    fprintf(cfile, "usleep(1105);\n");
-;}
-|DRONE_FORWARD SEMICOLON{printf("DRONE FORWARD\n") 
-	fprintf(cfile, "send(drone_sockfd, \"takeoff\", strlen(\"takeoff\"),0);\n");
+	fprintf(cfile, "usleep(1105);\n");
+}
+|DRONE_BACK SEMICOLON{printf("DRONE BACK\n") ;
+	fprintf(cfile, "send(drone_sockfd, \"back\", strlen(\"back\"),0);\n");
     fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
-    fprintf(cfile, "usleep(1105);\n");
-;}*/
+    fprintf(cfile, "send(drone_sockfd, \"stop\", strlen(\"stop\"),0);\n");
+    fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
+	fprintf(cfile, "usleep(1105);\n");
+}
+|DRONE_FORWARD SEMICOLON{printf("DRONE FORWARD\n");
+	fprintf(cfile, "send(drone_sockfd, \"forward\", strlen(\"forward\"),0);\n");
+    fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
+    fprintf(cfile, "send(drone_sockfd, \"stop\", strlen(\"stop\"),0);\n");
+    fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
+	fprintf(cfile, "usleep(1105);\n");
+}
 |DRONE_CLOCKWISE SEMICOLON{printf("DRONE CLOCKWISE\n"); 
 	fprintf(cfile, "send(drone_sockfd, \"clockwise\", strlen(\"clockwise\"),0);\n");
     fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
-    fprintf(cfile, "usleep(1105);\n");
-}/*
-|DRONE_CCLOCKWISE SEMICOLON{printf("DRONE CCLOCKWISE\n") 
+    fprintf(cfile, "send(drone_sockfd, \"stop\", strlen(\"stop\"),0);\n");
+    fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
+	fprintf(cfile, "usleep(1105);\n");
+}
+|DRONE_CCLOCKWISE SEMICOLON{printf("DRONE CCLOCKWISE\n");
 	fprintf(cfile, "send(drone_sockfd, \"takeoff\", strlen(\"takeoff\"),0);\n");
     fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
-    fprintf(cfile, "usleep(1105);\n");
-;}*/
+    fprintf(cfile, "send(drone_sockfd, \"stop\", strlen(\"stop\"),0);\n");
+    fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
+	fprintf(cfile, "usleep(1105);\n");
+}
 |DRONE_FLIPLEFT SEMICOLON{printf("DRONE FLIPLEFT\n");
 	fprintf(cfile, "send(drone_sockfd, \"flipleft\", strlen(\"flipleft\"),0);\n");
     fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
-    fprintf(cfile, "usleep(1105);\n");
+    fprintf(cfile, "send(drone_sockfd, \"stop\", strlen(\"stop\"),0);\n");
+    fprintf(cfile, "recv(drone_sockfd, drone_buffer, sizeof(drone_buffer), 0);\n");
+	fprintf(cfile, "usleep(1105);\n");
 }
 |DRONE_SANDL SEMICOLON{printf("DRONE SANDL\n");
 	fprintf(cfile, "send(drone_sockfd, \"s&l\", strlen(\"s&l\"),0);\n");
@@ -356,7 +416,13 @@ optional_statements RCBRK{fprintf(cfile,"}\n"); eprintf("IF Statement discovered
 }
 ;
 
-transition_statement: TRANSITION trans_state SEMICOLON
+transition_statement: {
+	int i = 0;
+	for(i = 0; i < num_global_elements; i++){
+		
+	}
+}
+TRANSITION trans_state SEMICOLON
 ;
 
 printf:QUOTE COMMA {eprintf("quote\n");fprintf(cfile,"%s,",$1);} vars_print
@@ -367,7 +433,7 @@ vars_print: var_print
 |vars_print COMMA {fprintf(cfile, ", ");} var_print
 ;
 
-var_print:ID {fprintf(cfile, "%s_S.%s", scope, $1);} assign
+var_print:ID {if(get_position($1) < 0) fprintf(cfile,"%s_S.%s", scope, $1); else fprintf(cfile,"%s_S.%s", "GLOBAL", $1);/*char* s = get_scope($1); eprintf("var_print SCOPE s: %s - scope %s\n", s, scope);fprintf(cfile, "%s_S.%s", get_scope($1), $1);*/} assign
 
 /*
 vars: var
@@ -445,7 +511,7 @@ math: item
 |math ADDOP{fprintf(cfile, " %s ", $2);}item
 ;
 
-item:ID {fprintf(cfile,"%s_S.%s", scope, $1);}
+item:ID {if(get_position($1) < 0) fprintf(cfile,"%s_S.%s", scope, $1); else fprintf(cfile,"%s_S.%s", "GLOBAL", $1); /*fprintf(cfile,"%s_S.%s", get_scope($1), $1);*/ eprintf("ITEM ID SCOPE\n");}
 |REALNO {eprintf("ADDING IN REALNO %d\n",yylineno);fprintf(cfile,"%f",$1);}
 |INT {fprintf(cfile,"%d",$1);}
 |FUNC {eprintf("STATEMENT ID FUNCTION\n"); fprintf(cfile,"%s",$1);}
@@ -456,9 +522,9 @@ comparison_list: comparison {eprintf("Single comparison\n");}
 |comparison_list OR {fprintf(cfile, " || ");}comparison {eprintf("Or found\n");}
 ;
 
-comparison: ID RELOP INT {fprintf(cfile,"%s_S.%s %s %d",scope,$1,$2,$3);eprintf("ID REL INT\n");}
-|ID RELOP ID {fprintf(cfile,"%s_S.%s %s %s_S.%s",scope,$1,$2,scope,$3);eprintf("ID REL ID\n");}
-|ID RELOP FUNC {fprintf(cfile,"%s_S.%s %s %s",scope,$1,$2,$3);eprintf("ID REL FUNC\n");}
+comparison: ID RELOP INT {if(get_position($1) < 0) fprintf(cfile,"%s_S.%s %s %d",scope,$1,$2,$3); else fprintf(cfile,"%s_S.%s %s %d","GLOBAL",$1,$2,$3);/*fprintf(cfile,"%s_S.%s %s %d",get_scope($1),$1,$2,$3);*/eprintf("ID REL INT\n");}
+|ID RELOP ID {if(get_position($1) < 0) fprintf(cfile,"%s_S.%s %s %s_S.%s",scope,$1,$2,scope,$3); else fprintf(cfile,"%s_S.%s %s %s_S.%s","GLOBAL",$1,$2,"GLOBAL",$3);/*fprintf(cfile,"%s_S.%s %s %s_S.%s",get_scope($1),$1,$2,scope,$3);*/eprintf("ID REL ID\n");}
+|ID RELOP FUNC {if(get_position($1) < 0) fprintf(cfile,"%s_S.%s %s %s",scope,$1,$2,$3); else fprintf(cfile,"%s_S.%s %s %s","GLOBAL",$1,$2,$3);/*fprintf(cfile,"%s_S.%s %s %s",get_scope($1),$1,$2,$3);*/eprintf("ID REL FUNC\n");}
 ;
 
 
@@ -495,6 +561,10 @@ yyerror(char *s){
 }
 
 int main(int argc, char* argv[]) {
+	g_list = malloc(sizeof(struct global_list));
+    g_list->head = NULL;
+    g_list->tail = NULL;
+	
 	extern FILE* yyin;
 	cfile = fopen("cfile.c", "w+");
 	mainfile = fopen("mainfile.c", "w+");
