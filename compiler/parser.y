@@ -251,13 +251,13 @@ program: {
 	G_declarations {
 		eprintf("GLOBAL Declarations End\n");
 		fprintf(embedded,"//%s\ndsflksdfs\n","\%d");
-		fprintf(cfile, "if( access(\"backup.txt\", F_OK) != -1 ) {\n    printf(\"file exists\\n\");\n//printf(\"BEFORE Value of first: %s\\n\", GLOBAL_S.test);\n//printf(\"BEFORE Value of first: %s\\n\", GLOBAL_S.var1);\n//printf(\"BEFORE Value of first: %s\\n\", GLOBAL_S.var2);\nfile_restore_global_values(&GLOBAL_S);\n//printf(\"AFTER Value of first: %s\\n\", GLOBAL_S.test);\n//printf(\"AFTER Value of first: %s\\n\", GLOBAL_S.var1);\n//printf(\"AFTER Value of first: %s\\n\", GLOBAL_S.var2);\n} else {\n    printf(\"file doesn't exist\\n\");\n}\n","\%d","\%d","\%d","\%d","\%d","\%d");
+		fprintf(cfile, "if( access(\"backup.txt\", F_OK) != -1 ) {\n    printf(\"file exists\\n\");\n//printf(\"BEFORE Value of first: %s\\n\", GLOBAL_S.test);\n//printf(\"BEFORE Value of first: %s\\n\", GLOBAL_S.var1);\n//printf(\"BEFORE Value of first: %s\\n\", GLOBAL_S.var2);\nfile_restore_global_values(&GLOBAL_S);\nvoid* ptr;\nif(!GLOBAL_S.Curr_State) ptr = states[GLOBAL_S.Curr_State];\nelse ptr = states[GLOBAL_S.Curr_State + 0];\ngoto *ptr;\n} else {\n    printf(\"file doesn't exist\\n\");\n}\n","\%d","\%d","\%d","\%d","\%d","\%d");
 		fprintf(cfile, "if(s){\nvoid* ptr = states[state];\ngoto *ptr;\n}\nelse{\ngoto *start_ptr;\n}\nbegin:;\n");
 		fprintf(struct_file,"\n} State_%s_Struct;\n\n", scope);
 	}
 	BEGINT {fprintf(mainfile, "void file_restore_global_values(State_GLOBAL_Struct *GLOBAL_S);\nvoid file_update_backup(int update_version, int position, int type, ...);\n\nint main(int argc, char* argv[]){\n");
 			fclose(mainfile);
-			if(inc_drone) system("cat imports/drone_control_setup.txt >> mainfile.c");
+			if(inc_drone) system("cat ../imports/drone_control_setup.txt >> mainfile.c");
 			mainfile = fopen("mainfile.c", "a+");
 			fprintf(mainfile,"int sockfd, n, o, s = 0, state = 0;\nchar *address = \"127.0.0.1\";\nwhile ((o = getopt (argc, argv, \"h:s:\")) != -1) {\nswitch(o){\ncase 'h':\naddress = optarg;\nbreak;\ncase 's':\ns = 1;\nstate = atoi(optarg);\nbreak;\n}\n}\nstruct sockaddr_in servaddr;\nsockfd=socket(AF_INET,SOCK_STREAM,0);\nbzero(&servaddr,sizeof servaddr);\nservaddr.sin_family=AF_INET;\nservaddr.sin_port=htons(22000);\ninet_pton(AF_INET, address, &(servaddr.sin_addr));\nconnect(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr));\npthread_t thread;\nvoid* states[] = {");} 
 	states 
@@ -414,10 +414,12 @@ optional_statements RCBRK{fprintf(cfile,"}\n"); eprintf("IF Statement discovered
 	fprintf(cfile, "\n%s\n", string);
 	num_embedded++;
 }
+|SLEEP SEMICOLON {fprintf(cfile,"%s;\n",$1);}
 ;
 
 transition_statement: {
 	int i = 0;
+	ffprintf(cfile, "file_update_backup(9, %d, %d, GLOBAL_S.%s);\n", 0, 0, "Curr_State");
 	for(i = 0; i < num_global_elements; i++){
 		
 	}

@@ -1,20 +1,25 @@
 #include <stdio.h>
 #include "drone"
 #start A 
-integer send = 0;
+integer Prev_State = 0;
 integer test = 9;
 
 #States
 State A{
-	send = send + 1;
-	print("Sending: %d\n", send);
-	transition A;
-
-}
-
-State B{
-	print("Test: %d\n", test);
+	drone.takeoff(99);
 	transition B;
 }
 
+State B{
+	Prev_State = 0;
+	drone.up(99);
+	sleep(3);
+	transition C;
+}
+State C{
+	Prev_State = 1;
+	drone.down(99);
+	sleep(3);
+	transition B;
+}
 #EndStates

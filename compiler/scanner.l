@@ -19,7 +19,7 @@ program {return PROGRAM ;}
 ","	{return COMMA;}
 "var"	{return VAR;}
 ":"	{return COLON;}
-"sleep("{UR}")"|"usleep("{UR}")"|"usleep("{I}")"	{yylval.string = (char*)strdup(yytext); return SLEEP;}
+"sleep("{UR}")"|"sleep("{I}")"|"usleep("{UR}")"|"usleep("{I}")"	{yylval.string = (char*)strdup(yytext); return SLEEP;}
 "volatile"	{return VOLATILE;}
 "nobackup"	{return NOBACKUP;}
 "string"	{return STRING;}

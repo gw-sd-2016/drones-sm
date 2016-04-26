@@ -14,7 +14,7 @@ var server = net.createServer(function(socket) {
 			  this.animate('flipLeft', 15);
 			  })5*/
 			if(String(data) === "stop"){
-			client.after(3000, function() {
+			client.after(2500, function() {
 				client.stop();
 				console.log("Stop");
 				});
@@ -34,26 +34,26 @@ var server = net.createServer(function(socket) {
 
 			if(String(data) === "left"){
 				client.after(3000, function() {
-						client.left(.5);
-						console.log("Left: .5");
+						client.left(.1);
+						console.log("Left: .1");
 						});
 			}
 			if(String(data) === "right"){
 				client.after(3000, function() {
-						client.right(.5);
-						console.log("Right: .5");
+						client.right(.1);
+						console.log("Right: .1");
 						});
 			}
 			if(String(data) === "forward"){
 				client.after(3000, function() {
-						client.front(.5);
-						console.log("forward: .5");
+						client.front(.1);
+						console.log("forward: .1");
 						});
 			}
 			if(String(data) === "back"){
 				client.after(3000, function() {
-						client.back(.5);
-						console.log("back: .5");
+						client.back(.1);
+						console.log("back: .1");
 						});
 			}
 			if(String(data) === "s&l"){
